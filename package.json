@@ -1,0 +1,18 @@
+{
+  "name": "primordio-server",
+  "version": "1.0.0",
+  "description": "Servidor do jogo Primórdio (beta) — tick-based MMO de estratégia",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "init-db": "node src/initdb.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "nanoid": "^5.0.7"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

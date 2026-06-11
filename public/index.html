@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Primórdio</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #000; }
+  body { min-height: 100vh; color: #d8c98e; font-family: Verdana, Geneva, sans-serif; font-weight: 600; font-size: 14px; margin: 0; }
+  .tela { display: none; } .tela.ativa { display: block; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 14px 12px 110px; }
+  h1,h2,h3,.serif { font-family: Georgia,'Times New Roman',serif; letter-spacing:.12em; }
+  button { background: linear-gradient(180deg,#3a5226,#243617 45%,#16230e); color:#e8c75a; border:2px solid #060906; outline:1px solid #4a6b38;
+    font-family:Georgia,serif; font-weight:700; letter-spacing:.1em; padding:12px 22px; border-radius:4px; cursor:pointer; font-size:14px;
+    text-shadow:0 1px 2px #000,0 0 8px rgba(232,199,90,.25); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 5px #000; min-height:44px; }
+  button:hover { background:linear-gradient(180deg,#48642f,#2c421d 45%,#1a2a12); color:#f4d97a; }
+  button:disabled { color:#5a6448; cursor:not-allowed; filter:grayscale(.4) brightness(.7); }
+  button.destaque { outline-color:#7ad4d4; color:#aef0f0; } button.alerta { outline-color:#d47a5a; color:#f0a98a; }
+  button.mini { padding:8px 14px; font-size:12px; min-height:40px; }
+  input,select { background:#060906; color:#e8c75a; border:1px solid #6b6f50; border-radius:3px; padding:11px 12px; font-family:inherit; font-weight:700; font-size:15px; min-height:44px; }
+  input::placeholder { color:#5a5a44; font-weight:400; }
+  .painel { background:#070a06; border:1px solid #2c3f24; border-radius:6px; padding:14px; box-shadow:inset 0 0 30px rgba(0,0,0,.7); }
+  .ouro{color:#e8c75a;} .verde{color:#9fd48a;} .cinza{color:#8a8a6a;font-weight:400;} .laranja{color:#e09a5a;}
+  .secao-h { font-family:Georgia,serif; color:#e8c75a; font-size:13px; letter-spacing:.16em; margin:20px 0 8px; border-bottom:1px solid #3a5226; padding-bottom:5px; }
+  .nota { color:#8a8a6a; font-size:10px; line-height:1.6; margin-top:10px; font-weight:400; }
+  .h-logo { text-align:center; padding:42px 16px 6px; }
+  .h-logo .titulo { font-family:Georgia,serif; font-weight:800; font-size:40px; letter-spacing:.14em; margin:0; color:#f0d469; text-shadow:0 0 22px rgba(80,200,80,.55),0 0 50px rgba(40,140,40,.4); }
+  .h-logo .subt { color:#cdbd7a; font-size:11px; letter-spacing:.45em; margin-top:7px; font-family:Georgia,serif; }
+  .h-vinheta { color:#8a8a5a; text-align:center; font-size:14px; letter-spacing:.4em; margin:8px 0 18px; }
+  .h-col { max-width:460px; margin:0 auto; padding:0 16px 40px; }
+  .h-col p { line-height:1.8; font-weight:400; color:#c9bd8e; font-size:13px; }
+  .h-col p::first-letter { font-family:Georgia,serif; font-size:30px; color:#e8c75a; float:left; line-height:.95; padding:2px 7px 0 0; }
+  .h-menu { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0; }
+  .h-menu button { padding:14px 0; font-size:13px; } .h-menu .full { grid-column:1/-1; }
+  .h-round { border:1px solid #2c3f24; border-radius:6px; padding:12px 14px; font-size:12px; margin-top:14px; }
+  .h-round .rb-t { color:#e8e85a; font-weight:700; margin-bottom:4px; } .h-round div { font-weight:400; color:#c9bd8e; line-height:1.7; }
+  .centro { max-width:440px; margin:36px auto; padding:0 12px; }
+  .campo { margin-bottom:12px; } .campo label { display:block; font-size:10px; color:#9a8d5a; margin-bottom:5px; letter-spacing:.18em; } .campo input { width:100%; }
+  .sorteio-carta { text-align:center; padding:44px 16px; }
+  .sorteio-nome { font-family:Georgia,serif; font-size:34px; color:#e8c75a; letter-spacing:.2em; min-height:46px; text-shadow:0 0 18px rgba(120,200,90,.5); }
+  .sorteio-desc { color:#b8ab78; font-size:12px; line-height:1.8; margin:14px auto; min-height:56px; font-weight:400; }
+  .topo { background:linear-gradient(180deg,#0c120b,#060906); border-bottom:2px solid #3a5226; padding:8px 12px; position:sticky; top:0; z-index:6; }
+  .topo-in { max-width:560px; margin:0 auto; }
+  .t-l1 { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .t-l1 .cla-nome { font-family:Georgia,serif; color:#e8c75a; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .t-l1 .lado { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+  .t-l2 { display:flex; gap:12px; font-size:11px; margin-top:5px; overflow-x:auto; white-space:nowrap; padding-bottom:2px; }
+  .t-l2 b { color:#e8c75a; } .t-l2 span { flex-shrink:0; }
+  .pill { font-size:10px; border:1px solid #3a5a30; color:#9fd48a; border-radius:999px; padding:2px 8px; }
+  .banner-round { font-size:10px; color:#8a8a6a; font-weight:400; margin-top:4px; }
+  .btn-tick { padding:6px 12px; font-size:11px; min-height:34px; }
+  .navbar { position:fixed; bottom:0; left:0; right:0; z-index:10; background:linear-gradient(180deg,#0c120b,#050705); border-top:2px solid #3a5226; display:flex; justify-content:space-around; padding:6px 4px calc(8px + env(safe-area-inset-bottom)); }
+  .navbar button { background:none; border:none; outline:none; box-shadow:none; color:#8a8a6a; font-family:Verdana,sans-serif; font-size:10px; padding:4px 8px; min-height:48px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .navbar button .ico { font-size:20px; } .navbar button.atual { color:#f4d97a; }
+  .sheet { position:fixed; bottom:0; left:0; right:0; z-index:20; background:#0c120b; border-top:2px solid #e8c75a; border-radius:14px 14px 0 0; padding:16px 16px calc(20px + env(safe-area-inset-bottom)); display:none; }
+  .sheet.aberta { display:block; } .sheet h4 { font-family:Georgia,serif; color:#e8c75a; margin:0 0 12px; font-size:13px; }
+  .sheet .itens { display:grid; grid-template-columns:1fr 1fr; gap:10px; } .sheet .itens button { width:100%; padding:13px 0; font-size:12px; }
+  .veu { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:15; display:none; } .veu.aberta { display:block; }
+  .lista-clas { display:flex; flex-direction:column; gap:8px; }
+  .cla-linha { display:flex; gap:10px; align-items:center; background:linear-gradient(90deg,#0c120b,#070a06); border:1px solid #2c3f24; border-radius:6px; padding:12px; }
+  .cla-linha.meu { border-color:#e8c75a; } .cla-linha.vazio { opacity:.4; }
+  .cla-linha .band { font-size:24px; flex-shrink:0; } .cla-linha .info { flex:1; min-width:0; }
+  .cla-linha .coord { font-family:Georgia,serif; color:#9a8d5a; font-size:10px; }
+  .cla-linha .cnome { font-family:Georgia,serif; color:#e8c75a; font-size:14px; }
+  .cla-linha .clider { font-size:11px; color:#b8ab78; font-weight:400; }
+  .cla-linha .dir { text-align:right; flex-shrink:0; } .cla-linha .cnivel { font-size:11px; color:#9fd48a; }
+  .mundo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; } .mundo-grid button { padding:12px 0; font-size:12px; }
+  .mundo-grid button.aqui { outline-color:#e8c75a; color:#f4d97a; }
+  .ucard { background:#0a0e08; border:1px solid #1c2414; border-radius:6px; margin-bottom:8px; overflow:hidden; }
+  .ucard.trancada { opacity:.5; }
+  .ucard .cab { display:flex; align-items:center; gap:10px; padding:12px; cursor:pointer; min-height:48px; }
+  .ucard .unome { font-family:Georgia,serif; color:#e8c75a; font-size:14px; flex:1; }
+  .ucard .badge { font-size:10px; border:1px solid #4a6b38; border-radius:999px; padding:2px 8px; color:#9fd48a; flex-shrink:0; }
+  .ucard .custo { font-size:10px; color:#8a8a6a; font-weight:400; flex-shrink:0; text-align:right; }
+  .ucard .corpo { display:none; padding:0 12px 12px; border-top:1px solid #141c10; } .ucard.aberta .corpo { display:block; }
+  .ustats { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:10px 0; font-size:10px; font-weight:400; color:#b8ab78; }
+  .ustats b { display:block; color:#e8c75a; font-size:13px; }
+  .ucard .acao { display:flex; gap:8px; align-items:center; } .ucard .acao input { width:80px; } .ucard .acao button { flex:1; }
+  .fila-item { display:flex; justify-content:space-between; padding:10px 4px; border-bottom:1px solid #10160c; font-size:12px; }
+  .slot-card { background:#070a06; border:1px solid #2c3f24; border-radius:6px; padding:14px; margin-bottom:12px; }
+  .slot-card.ativo { border-color:#e09a5a; } .slot-card h4 { font-family:Georgia,serif; color:#e8c75a; font-size:13px; margin:0 0 8px; display:flex; justify-content:space-between; }
+  .slot-tropa { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 0; font-size:12px; font-weight:400; } .slot-tropa input { width:76px; }
+  .slot-alvo { display:flex; gap:8px; margin-top:10px; } .slot-alvo input { flex:1; min-width:0; }
+  .barra-viagem { height:8px; background:#10160c; border-radius:999px; overflow:hidden; margin:8px 0; } .barra-viagem div { height:100%; background:linear-gradient(90deg,#6b8a3a,#e8c75a); }
+  .relatorio-box { font-size:12px; font-weight:400; line-height:1.7; border-bottom:1px solid #10160c; padding:10px 2px; }
+  .pq { border:1px solid #1c2414; border-radius:6px; padding:12px; margin-bottom:6px; background:#0a0e08; }
+  .pq.feita { border-color:#3a5a30; } .pq.bloq { opacity:.45; }
+  .pq .pn { font-family:Georgia,serif; color:#e8c75a; font-size:13px; } .pq .pd { font-size:11px; color:#b8ab78; font-weight:400; margin:4px 0; }
+  .pq .pc { font-size:10px; color:#8a8a6a; font-weight:400; } .pq .acao { margin-top:8px; } .pq .acao button { width:100%; }
+  .seta-cadeia { text-align:center; color:#5a6b48; font-size:13px; margin:2px 0; }
+  .cadeia-t { font-family:Georgia,serif; color:#e8c75a; font-size:12px; letter-spacing:.12em; margin:16px 0 8px; text-align:center; }
+  .rk-linha { display:flex; gap:10px; align-items:center; padding:11px 10px; border-bottom:1px solid #10160c; font-size:12px; }
+  .rk-linha.meu { background:#141c0a; border:1px solid #e8c75a; border-radius:6px; }
+  .rk-pos { font-family:Georgia,serif; color:#e8c75a; width:36px; text-align:center; font-size:15px; flex-shrink:0; }
+  .rk-info { flex:1; min-width:0; } .rk-cla { font-family:Georgia,serif; color:#e8c75a; } .rk-sub { font-size:10px; color:#8a8a6a; font-weight:400; } .rk-xp { color:#9fd48a; flex-shrink:0; font-size:13px; }
+  #toast { position:fixed; bottom:86px; left:50%; transform:translateX(-50%); background:#141c0a; color:#e8c75a; border:1px solid #e8c75a; border-radius:6px; padding:12px 20px; font-size:12px; display:none; z-index:50; max-width:92vw; text-align:center; }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="veu" id="veu" onclick="fecharSheet()"></div>
+
+<!-- HOME -->
+<div class="tela ativa" id="tela-home">
+  <div class="h-logo"><div class="titulo">PRIMÓRDIO</div><div class="subt">O PRINCÍPIO DE UMA ERA</div></div>
+  <div class="h-vinheta">⌘ ⚜ ⌘</div>
+  <div class="h-col">
+    <p>rimórdio é um jogo de estratégia em ticks. Lidere um clã, alie-se aos vizinhos do seu território e guerreie pelos outros — vence o round quem conquistar mais experiência em combate.</p>
+    <div class="h-menu">
+      <button onclick="abrirRankingPub()">🏆 TÍTULO</button>
+      <button onclick="abrirUnidadesPub()">⚔ UNIDADES</button>
+      <button class="destaque full" onclick="irPara('tela-cadastro')">ENTRAR COM CONVITE</button>
+    </div>
+    <div class="h-round" id="home-round"><div class="rb-t">Carregando estado do round…</div></div>
+  </div>
+</div>
+
+<!-- CADASTRO -->
+<div class="tela" id="tela-cadastro">
+  <div class="centro painel">
+    <h2 class="ouro" style="margin-top:0; font-size:18px;">Entrar no beta</h2>
+    <div class="campo"><label>CÓDIGO DE CONVITE</label><input type="text" id="cad-convite" placeholder="PRIM-XXXXXX"></div>
+    <div class="campo"><label>NOME DO CLÃ</label><input type="text" id="cad-cla" maxlength="24" placeholder="ex.: Guardiões do Sul"></div>
+    <div class="campo"><label>NOME DO LÍDER</label><input type="text" id="cad-lider" maxlength="20" placeholder="ex.: Rodrigo"></div>
+    <p class="nota">Sua raça é sorteada ao entrar. Guarde o link — sua sessão fica salva neste aparelho.</p>
+    <button class="destaque" style="width:100%;" onclick="cadastrar()">ENTRAR E SORTEAR RAÇA</button>
+    <button class="mini" style="width:100%; margin-top:8px;" onclick="irPara('tela-home')">← voltar</button>
+  </div>
+</div>
+
+<!-- SORTEIO -->
+<div class="tela" id="tela-sorteio">
+  <div class="centro painel sorteio-carta">
+    <div class="cinza" style="letter-spacing:.25em; font-size:10px;">OS DADOS DO DESTINO FORAM LANÇADOS</div>
+    <div class="sorteio-nome" id="sorteio-nome">…</div>
+    <div class="sorteio-desc" id="sorteio-desc"></div>
+    <button id="sorteio-btn" class="destaque" style="display:none; width:100%;" onclick="entrarNoJogo()">ASSUMIR O CLÃ</button>
+  </div>
+</div>
+
+<!-- JOGO -->
+<div class="tela" id="tela-jogo">
+  <div class="topo"><div class="topo-in">
+    <div class="t-l1">
+      <span class="cla-nome" id="ui-cla">—</span>
+      <span class="lado"><span class="pill" id="ui-protecao">🛡</span><span class="pill" id="ui-tickpill">tick 0</span></span>
+    </div>
+    <div class="t-l2">
+      <span>🪙 <b id="ui-ouro">0</b></span><span>🪵 <b id="ui-madeira">0</b></span><span>🌾 <b id="ui-alimento">0</b></span>
+      <span>⛏ <b id="ui-trabs">—</b></span><span>XP <b id="ui-xp">0</b></span><span class="cinza" id="ui-coord-raca">—</span>
+    </div>
+    <div class="banner-round" id="banner-round"></div>
+  </div></div>
+  <div class="wrap">
+    <div id="aba-territorio">
+      <div class="painel" style="display:flex; gap:12px; align-items:center;">
+        <span style="font-size:36px; cursor:pointer;" id="ui-bandeira" onclick="trocarBandeira()">🏴</span>
+        <div style="flex:1; min-width:0;">
+          <input type="text" id="ui-terr-nome" maxlength="28" onchange="salvarNomeTerr(this.value)" style="width:100%; font-family:Georgia,serif;">
+          <div class="cinza" style="font-size:10px; margin-top:4px;" id="ui-terr-coord">—</div>
+        </div>
+      </div>
+      <div class="secao-h">ALIADOS DO TERRITÓRIO <span id="ui-terr-num"></span></div>
+      <div class="lista-clas" id="lista-meu-territorio"></div>
+      <div class="secao-h">TRABALHADORES — livres: <span id="ui-livres" class="ouro">6</span></div>
+      <div id="caixa-aloc"></div>
+      <p class="nota">60/tick por trabalhador. Roubados de inimigos chegam livres e só produzem após alocados.</p>
+    </div>
+    <div id="aba-mundo" style="display:none;">
+      <div class="secao-h">MUNDO</div>
+      <div class="mundo-grid" id="mundo-grid"></div>
+      <div class="secao-h" id="mundo-titulo" style="display:none;"></div>
+      <div class="lista-clas" id="lista-territorio-visitado"></div>
+    </div>
+    <div id="aba-ataques" style="display:none;">
+      <div class="secao-h">SLOTS DE ENVIO</div>
+      <div id="slots-grid"></div>
+      <div class="secao-h">RELATÓRIOS</div>
+      <div class="painel" id="relatorios"></div>
+    </div>
+    <div id="aba-tropas" style="display:none;">
+      <div class="secao-h">RECRUTAMENTO</div>
+      <div id="cards-tropas"></div>
+      <div class="secao-h">FILA</div><div class="painel" id="fila-tropas"></div>
+      <div class="secao-h">EXÉRCITO NA BASE</div><div class="painel" id="exercito"></div>
+    </div>
+    <div id="aba-pesquisas" style="display:none;">
+      <div class="secao-h">PESQUISAS</div><div id="cadeias"></div>
+      <div class="secao-h">EM ANDAMENTO</div><div class="painel" id="fila-pesquisas"></div>
+    </div>
+    <div id="aba-fundo" style="display:none;">
+      <div class="secao-h">FUNDO DO TERRITÓRIO</div>
+      <div class="painel" style="display:flex; justify-content:space-around; text-align:center;">
+        <div>🪙<br><b class="ouro" id="fundo-ouro">0</b></div><div>🪵<br><b class="ouro" id="fundo-madeira">0</b></div><div>🌾<br><b class="ouro" id="fundo-alimento">0</b></div>
+      </div>
+      <div class="secao-h">DOAR</div>
+      <div class="painel">
+        <div class="slot-tropa"><span>🪙</span><input type="number" id="doa-ouro" value="0" min="0"></div>
+        <div class="slot-tropa"><span>🪵</span><input type="number" id="doa-madeira" value="0" min="0"></div>
+        <div class="slot-tropa"><span>🌾</span><input type="number" id="doa-alimento" value="0" min="0"></div>
+        <button style="width:100%; margin-top:8px;" class="mini" onclick="doarFundo()">DOAR</button>
+      </div>
+      <div class="secao-h">RETIRAR <span class="cinza" style="font-size:10px;" id="fundo-permissao"></span></div>
+      <div class="painel">
+        <div class="slot-tropa"><span>🪙</span><input type="number" id="ret-ouro" value="0" min="0"></div>
+        <div class="slot-tropa"><span>🪵</span><input type="number" id="ret-madeira" value="0" min="0"></div>
+        <div class="slot-tropa"><span>🌾</span><input type="number" id="ret-alimento" value="0" min="0"></div>
+        <button style="width:100%; margin-top:8px;" class="mini" id="btn-retirar" onclick="retirarFundo()">RETIRAR</button>
+      </div>
+      <div class="secao-h">GOVERNANÇA</div>
+      <div class="painel">
+        <div style="font-size:12px; line-height:1.8;">Líder: <b class="ouro" id="gov-lider">—</b><br>Conselheiro: <b class="ouro" id="gov-conselheiro">—</b></div>
+        <div id="tab-votos" style="margin-top:10px;"></div>
+        <div style="margin-top:12px;"><label class="cinza" style="font-size:10px;">SEU VOTO PARA LÍDER</label>
+          <div style="display:flex; gap:8px; margin-top:4px;"><select id="sel-voto" style="flex:1;"></select><button class="mini" onclick="votar()">VOTAR</button></div></div>
+        <div id="caixa-nomear" style="display:none; margin-top:12px;"><label class="cinza" style="font-size:10px;">NOMEAR CONSELHEIRO</label>
+          <div style="display:flex; gap:8px; margin-top:4px;"><select id="sel-conselheiro" style="flex:1;"></select><button class="mini" onclick="nomearConselheiro()">NOMEAR</button></div></div>
+        <p class="nota">Se o líder muda, o conselheiro nomeado por ele cai automaticamente.</p>
+      </div>
+    </div>
+    <div id="aba-ranking" style="display:none;"><div class="secao-h">🏆 RANKING (XP)</div><div id="ranking-lista"></div></div>
+    <div id="aba-unidades" style="display:none;"><div id="cards-unidades-todas"></div></div>
+    <div id="aba-niveis" style="display:none;"><div class="secao-h">NÍVEIS</div><div class="painel" id="tab-niveis"></div>
+      <p class="nota">Atacar 3+ níveis abaixo rende XP quase nulo.</p></div>
+  </div>
+  <div class="navbar">
+    <button id="nav-territorio" class="atual" onclick="abaJogo('territorio')"><span class="ico">🏰</span>Território</button>
+    <button id="nav-mundo" onclick="abaJogo('mundo')"><span class="ico">🗺️</span>Mundo</button>
+    <button id="nav-ataques" onclick="abaJogo('ataques')"><span class="ico">⚔️</span>Ataques</button>
+    <button id="nav-tropas" onclick="abaJogo('tropas')"><span class="ico">🛡️</span>Tropas</button>
+    <button id="nav-mais" onclick="abrirSheet()"><span class="ico">☰</span>Mais</button>
+  </div>
+  <div class="sheet" id="sheet"><h4>MAIS</h4><div class="itens">
+    <button onclick="abaJogo('pesquisas');fecharSheet();">📜 Pesquisas</button>
+    <button onclick="abaJogo('fundo');fecharSheet();">🏛 Fundo</button>
+    <button onclick="abaJogo('ranking');fecharSheet();">🏆 Ranking</button>
+    <button onclick="abaJogo('unidades');fecharSheet();">⚔ Unidades</button>
+    <button onclick="abaJogo('niveis');fecharSheet();">📈 Níveis</button>
+    <button onclick="sair();">🚪 Sair</button>
+  </div></div>
+</div>
+
+<!-- públicas -->
+<div class="tela" id="tela-pub"><div class="wrap" style="padding-bottom:30px;"><button class="mini" onclick="irPara('tela-home')">← VOLTAR</button><div id="pub-conteudo"></div></div></div>
+
+<script>
+const API = "";
+let DADOS=null, TOKEN=localStorage.getItem("primordio_token")||null, EST=null, BANDEIRAS=["🏴","🦁","🐺","🦅","🐉","⚔️","🛡️","🌑","🔥","🌲","👑","💀"];
+const U=a=>({classe:a[0],a1:a[1],a2:a[2],a3:a[3],ini:a[4],def:a[5],atq:a[6],qatq:a[7],dano:a[8],vida:a[9],xp:a[10],ouro:a[11],madeira:a[12],alimento:a[13],turno:a[14]});
+const cssId=s=>s.replace(/[^a-z0-9]/gi,"_");
+const fmt=n=>(n||0).toLocaleString("pt-BR");
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",3000); }
+function irPara(id){ document.querySelectorAll(".tela").forEach(t=>t.classList.remove("ativa")); document.getElementById(id).classList.add("ativa"); }
+function abrirSheet(){ document.getElementById("sheet").classList.add("aberta"); document.getElementById("veu").classList.add("aberta"); }
+function fecharSheet(){ document.getElementById("sheet").classList.remove("aberta"); document.getElementById("veu").classList.remove("aberta"); }
+
+async function api(path, body){
+  const opt={ method: body?"POST":"GET", headers:{"Content-Type":"application/json"} };
+  if (TOKEN) opt.headers["x-token"]=TOKEN;
+  if (body) opt.body=JSON.stringify(body);
+  const r=await fetch(API+path, opt);
+  const j=await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(j.erro||("Erro "+r.status));
+  return j;
+}
+
+async function carregarDados(){ if(!DADOS) DADOS=await api("/api/dados"); }
+function statsUnidade(raca,nome){ return nome==="Mercenário"?U(DADOS.MERC):U(DADOS.RACAS[raca][nome]); }
+function pesquisaDaClasse(classe){ for(const[id,p]of Object.entries(DADOS.PESQ)) if(p.classe===classe) return id; return null; }
+function classeLiberada(classe){ const pid=pesquisaDaClasse(classe); if(!pid) return true; return EST.pesquisas.includes(pid); }
+
+async function atualizarHomeRound(){
+  try{ const d=await api("/api/dados"); DADOS=d;
+    // pega estado do round via ranking? usamos /api/estado se logado; senão tenta admin-free endpoint
+  }catch(e){}
+  // estado do round é público via /api/ranking não traz; criamos chamada leve:
+  try{
+    const r=await fetch(API+"/api/territorio/1",{headers:TOKEN?{"x-token":TOKEN}:{}});
+  }catch(e){}
+}
+
+// ---------- CADASTRO ----------
+async function cadastrar(){
+  await carregarDados();
+  const convite=document.getElementById("cad-convite").value.trim();
+  const cla=document.getElementById("cad-cla").value.trim();
+  const lider=document.getElementById("cad-lider").value.trim();
+  if(!convite||!cla||!lider){ toast("Preencha convite, clã e líder."); return; }
+  try{
+    const r=await api("/api/cadastrar",{convite,cla,lider});
+    TOKEN=r.token; localStorage.setItem("primordio_token",TOKEN);
+    irPara("tela-sorteio");
+    const racas=Object.keys(DADOS.RACAS); const nomeEl=document.getElementById("sorteio-nome"), descEl=document.getElementById("sorteio-desc");
+    let i=0; const rol=setInterval(()=>{ nomeEl.textContent=racas[i%racas.length]; i++; },110);
+    setTimeout(()=>{ clearInterval(rol); nomeEl.textContent=r.raca.toUpperCase(); descEl.textContent=r.descricao;
+      document.getElementById("sorteio-btn").style.display="block"; },2000);
+  }catch(e){ toast(e.message); }
+}
+async function entrarNoJogo(){ irPara("tela-jogo"); await refresh(); iniciarPolling(); }
+function sair(){ localStorage.removeItem("primordio_token"); TOKEN=null; EST=null; clearInterval(window._poll); fecharSheet(); irPara("tela-home"); }
+
+// ---------- AÇÕES ----------
+async function acao(path, body, msg){ try{ await api(path,body); if(msg) toast(msg); await refresh(); }catch(e){ toast(e.message); } }
+function alocar(rec,d){ acao("/api/alocar",{recurso:rec,delta:d}); }
+function trocarBandeira(){ const nova=((EST.clan.bandeira||0)+1)%BANDEIRAS.length; acao("/api/territorio-editar",{bandeira:nova}); }
+function salvarNomeTerr(v){ acao("/api/territorio-editar",{terrNome:v}); }
+function recrutar(nome){ const q=Math.max(1,parseInt(document.getElementById("q-"+cssId(nome)).value)||1); acao("/api/recrutar",{unidade:nome,qtd:q}); }
+function pesquisar(pid){ acao("/api/pesquisar",{pid}); }
+function enviarSlot(idx){
+  const alvo=document.getElementById("alvo-"+idx).value.trim(); const tropas={};
+  for(const n of Object.keys(EST.exercito)){ const el=document.getElementById("st-"+idx+"-"+cssId(n)); const v=el?Math.max(0,parseInt(el.value)||0):0; if(v>0) tropas[n]=v; }
+  acao("/api/atacar",{idx,alvo,tropas},"Expedição enviada!");
+}
+function recuarSlot(idx){ acao("/api/recuar",{idx},"Recuo iniciado."); }
+function vd(id){ return Math.max(0,parseInt(document.getElementById(id).value)||0); }
+function doarFundo(){ acao("/api/fundo/doar",{ouro:vd("doa-ouro"),madeira:vd("doa-madeira"),alimento:vd("doa-alimento")},"Doação registrada."); }
+function retirarFundo(){ acao("/api/fundo/retirar",{ouro:vd("ret-ouro"),madeira:vd("ret-madeira"),alimento:vd("ret-alimento")},"Retirada efetuada."); }
+function votar(){ acao("/api/votar",{coord:document.getElementById("sel-voto").value},"Voto registrado."); }
+function nomearConselheiro(){ acao("/api/nomear",{coord:document.getElementById("sel-conselheiro").value},"Conselheiro nomeado."); }
+function prepararAtaque(coord){
+  const idx=(EST.slots.find(s=>s.fase==="base")||{}).idx;
+  if(idx===undefined){ toast("Os 4 slots estão em uso."); return; }
+  abaJogo("ataques");
+  setTimeout(()=>{ const el=document.getElementById("alvo-"+idx); if(el) el.value=coord; toast("Alvo "+coord+" no slot "+(idx+1)); },60);
+}
+
+// ---------- ABAS ----------
+function abaJogo(aba){
+  ["territorio","mundo","ataques","tropas","pesquisas","fundo","ranking","unidades","niveis"].forEach(a=>{
+    const el=document.getElementById("aba-"+a); if(el) el.style.display=(a===aba?"block":"none");
+    const nv=document.getElementById("nav-"+a); if(nv) nv.classList.toggle("atual",a===aba);
+  });
+  document.getElementById("nav-mais").classList.toggle("atual",["pesquisas","fundo","ranking","unidades","niveis"].includes(aba));
+  if(aba==="mundo") renderMundo();
+  if(aba==="fundo") renderFundo();
+  if(aba==="ranking") renderRanking();
+}
+
+// ---------- POLLING ----------
+function iniciarPolling(){ clearInterval(window._poll); window._poll=setInterval(refresh, 5000); }
+async function refresh(){
+  if(!TOKEN) return;
+  try{ await carregarDados(); EST=await api("/api/estado"); render(); }
+  catch(e){ if(String(e.message).includes("Sessão")){ sair(); } }
+}
+
+// ---------- RENDER ----------
+function render(){
+  if(!EST) return;
+  const c=EST.clan, r=EST.round;
+  document.getElementById("ui-cla").textContent=c.nome+" · nv "+c.nivel;
+  document.getElementById("ui-ouro").textContent=fmt(c.ouro);
+  document.getElementById("ui-madeira").textContent=fmt(c.madeira);
+  document.getElementById("ui-alimento").textContent=fmt(c.alimento);
+  document.getElementById("ui-trabs").textContent=c.trab_ouro+"/"+c.trab_madeira+"/"+c.trab_alimento+" (+"+c.trab_livres+")";
+  document.getElementById("ui-xp").textContent=fmt(c.xp);
+  document.getElementById("ui-coord-raca").textContent=c.territorio+"."+c.slot+" · "+c.raca;
+  document.getElementById("ui-tickpill").textContent="tick "+r.tick;
+  const prot=document.getElementById("ui-protecao");
+  if(c.protecao>0){ prot.style.display="inline"; prot.textContent="🛡 "+c.protecao; } else prot.style.display="none";
+  document.getElementById("banner-round").textContent="Round: "+r.status.toUpperCase()+" · tick "+r.tick+" de "+r.duracao+" · "+(r.tick_segundos)+"s/tick";
+  document.getElementById("ui-bandeira").textContent=BANDEIRAS[c.bandeira||0];
+  const nomeInput=document.getElementById("ui-terr-nome"); if(document.activeElement!==nomeInput) nomeInput.value=c.terr_nome;
+  document.getElementById("ui-terr-coord").textContent="Sua coordenada "+c.territorio+"."+c.slot;
+  document.getElementById("ui-terr-num").textContent=c.territorio;
+  document.getElementById("ui-livres").textContent=c.trab_livres;
+  // alocação
+  document.getElementById("caixa-aloc").innerHTML=["ouro","madeira","alimento"].map(rec=>{
+    const ico=rec==="ouro"?"🪙":rec==="madeira"?"🪵":"🌾"; const v=c["trab_"+rec];
+    return '<div class="painel" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span>'+ico+' '+rec.toUpperCase()+'</span><span style="display:flex; gap:8px; align-items:center;"><button class="mini" onclick="alocar(\''+rec+'\',-1)">−</button><b class="ouro" style="font-size:20px; min-width:30px; text-align:center;">'+v+'</b><button class="mini" onclick="alocar(\''+rec+'\',1)">+</button></span></div>';
+  }).join("");
+  // meu território
+  renderMeuTerritorio();
+  // mundo grid
+  let mg=""; for(let t=1;t<=DADOS.CONST.TERRITORIOS;t++) mg+='<button class="'+(t===c.territorio?"aqui":"")+'" onclick="verTerritorio('+t+')">'+t+(t===c.territorio?"★":"")+'</button>';
+  document.getElementById("mundo-grid").innerHTML=mg;
+  // slots
+  document.getElementById("slots-grid").innerHTML=EST.slots.map(cardSlot).join("");
+  document.getElementById("relatorios").innerHTML=EST.relatorios.length?EST.relatorios.map(x=>'<div class="relatorio-box"><span class="ouro">[t'+x.tick+']</span> '+x.texto+'</div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma batalha ainda.</div>';
+  // tropas
+  let ct=""; for(const[nome,arr]of Object.entries(DADOS.RACAS[c.raca])) ct+=cardUnidade(nome,arr,c.raca,true); ct+=cardUnidade("Mercenário",DADOS.MERC,null,true);
+  document.getElementById("cards-tropas").innerHTML=ct;
+  document.getElementById("fila-tropas").innerHTML=EST.fila.length?EST.fila.map(f=>'<div class="fila-item"><span>'+f.unidade+' ×'+f.qtd+'</span><span class="ouro">'+f.restam+' tick(s)</span></div>').join(""):'<div class="cinza" style="font-size:12px;">Fila vazia.</div>';
+  const ex=Object.entries(EST.exercito);
+  document.getElementById("exercito").innerHTML=ex.length?ex.map(([n,q])=>'<div class="fila-item"><span>'+n+'</span><span class="ouro">×'+q+'</span></div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma tropa na base.</div>';
+  // pesquisas
+  let ch=""; for(const cad of [1,2,3,"e"]){ const ids=Object.keys(DADOS.PESQ).filter(id=>DADOS.PESQ[id].cadeia===cad);
+    const titulo={1:"⚔ CAMINHO DA FRENTE",2:"🏹 CAMINHO DO ARCANO",3:"🐎 CAMINHO DA MONTARIA",e:"🕵 ESPIONAGEM"}[cad];
+    ch+='<div class="cadeia-t">'+titulo+'</div>'+ids.map((id,i)=>cardPesq(id)+(i<ids.length-1&&cad!=="e"?'<div class="seta-cadeia">▼</div>':'')).join(""); }
+  document.getElementById("cadeias").innerHTML=ch;
+  document.getElementById("fila-pesquisas").innerHTML=EST.pesqAtivas.length?EST.pesqAtivas.map(a=>'<div class="fila-item"><span>'+DADOS.PESQ[a.pid].nome+'</span><span class="ouro">'+a.restam+' tick(s)</span></div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma em andamento.</div>';
+  // unidades + níveis
+  let todas=""; for(const[raca,unidades]of Object.entries(DADOS.RACAS)){ todas+='<div class="secao-h">'+raca.toUpperCase()+'</div>'; for(const[n,a]of Object.entries(unidades)) todas+=cardUnidade(n,a,raca,false); }
+  document.getElementById("cards-unidades-todas").innerHTML=todas;
+  document.getElementById("tab-niveis").innerHTML=DADOS.NIVEIS.map(n=>'<div class="fila-item"><span>Nível <b class="ouro">'+n[0]+'</b></span><span class="cinza">'+fmt(n[1])+' XP</span></div>').join("");
+}
+async function renderMeuTerritorio(){
+  try{ const d=await api("/api/territorio/"+EST.clan.territorio);
+    document.getElementById("lista-meu-territorio").innerHTML=d.slots.map(s=>linhaClA(s,true)).join("");
+  }catch(e){}
+}
+async function verTerritorio(t){
+  try{ const d=await api("/api/territorio/"+t);
+    document.getElementById("mundo-titulo").style.display="block";
+    document.getElementById("mundo-titulo").textContent="TERRITÓRIO "+t+(t===EST.clan.territorio?" — (o seu)":"");
+    document.getElementById("lista-territorio-visitado").innerHTML=d.slots.map(s=>linhaClA(s,t===EST.clan.territorio)).join("");
+  }catch(e){ toast(e.message); }
+}
+function renderMundo(){ /* grid já renderizado */ }
+function linhaClA(s,mesmoTerr){
+  if(s.meu) return '<div class="cla-linha meu"><span class="band">'+BANDEIRAS[s.bandeira||0]+'</span><span class="info"><span class="coord">'+s.coord+'</span><br><span class="cnome">'+s.nome+'</span><br><span class="clider">líder: '+s.lider+'</span></span><span class="dir"><span class="cnivel">nv '+s.nivel+'</span><br><span class="cinza" style="font-size:9px;">VOCÊ</span></span></div>';
+  if(s.vazio) return '<div class="cla-linha vazio"><span class="band">·</span><span class="info"><span class="coord">'+s.coord+'</span><br><span class="cinza">slot vazio</span></span></div>';
+  const dir=mesmoTerr?'<span class="cnivel">nv '+s.nivel+'</span><br><span class="verde" style="font-size:9px;">ALIADO</span>':'<span class="cnivel">nv '+s.nivel+'</span><br><button class="mini" style="margin-top:4px;" onclick="prepararAtaque(\''+s.coord+'\')">ATACAR</button>';
+  return '<div class="cla-linha"><span class="band">'+BANDEIRAS[s.bandeira||0]+'</span><span class="info"><span class="coord">'+s.coord+'</span><br><span class="cnome">'+s.nome+'</span><br><span class="clider">líder: '+s.lider+'</span></span><span class="dir">'+dir+'</span></div>';
+}
+function cardUnidade(nome,arr,raca,interativo){
+  const u=statsUnidade(raca||EST.clan.raca,nome); const ok=!interativo||nome==="Mercenário"||classeLiberada(u.classe);
+  return '<div class="ucard '+(ok?"":"trancada")+'"><div class="cab" onclick="this.parentElement.classList.toggle(\'aberta\')"><span class="unome">'+nome+'</span><span class="badge">'+u.classe+(ok?"":" 🔒")+'</span><span class="custo">🪙'+u.ouro+' 🪵'+u.madeira+' 🌾'+u.alimento+'<br>'+u.turno+' ticks</span></div><div class="corpo"><div class="ustats"><span>Ini<b>'+u.ini+'</b></span><span>Def<b>'+u.def+'</b></span><span>Atq<b>'+u.atq+'</b></span><span>QAtq<b>'+u.qatq+'</b></span><span>Dano<b>'+u.dano+'</b></span><span>Vida<b>'+u.vida+'</b></span><span>Xp<b>'+u.xp+'</b></span><span>Alvos<b style="font-size:10px;">'+(u.a1||"–")+" "+(u.a2||"–")+" "+(u.a3||"–")+'</b></span></div>'+(interativo?(ok?'<div class="acao"><input type="number" id="q-'+cssId(nome)+'" value="1" min="1"><button class="mini" onclick="recrutar(\''+nome.replace(/'/g,"\\'")+'\')">RECRUTAR</button></div>':'<div class="cinza" style="font-size:11px;">Pesquise '+u.classe+'.</div>'):"")+'</div></div>';
+}
+function cardSlot(s){
+  let h='<div class="slot-card '+(s.fase!=="base"?"ativo":"")+'"><h4>SLOT '+(s.idx+1)+'<span class="cinza" style="font-size:10px;">'+(s.fase==="base"?"na base":s.fase==="indo"?"→ "+s.alvo:"retornando")+'</span></h4>';
+  if(s.fase==="base"){
+    const tipos=Object.entries(EST.exercito);
+    if(!tipos.length) h+='<div class="cinza" style="font-size:12px;">Sem tropas na base.</div>';
+    else{ tipos.forEach(([n,q])=>{ h+='<div class="slot-tropa"><span>'+n+' <span class="cinza">('+q+')</span></span><input type="number" min="0" max="'+q+'" value="0" id="st-'+s.idx+'-'+cssId(n)+'"></div>'; });
+      h+='<div class="slot-alvo"><input type="text" id="alvo-'+s.idx+'" placeholder="alvo ex.: 3.4"><button class="mini" onclick="enviarSlot('+s.idx+')">ENVIAR</button></div>'; }
+  } else {
+    const V=DADOS.CONST.VIAGEM;
+    h+='<div style="font-size:12px; font-weight:400;">';
+    if(s.tropas) for(const[n,q]of Object.entries(s.tropas)) if(q>0) h+=n+' ×'+q+'<br>';
+    if(s.carga>0) h+='<span class="verde">+ '+s.carga+' trab. roubado(s)</span><br>';
+    h+='<div class="barra-viagem"><div style="width:'+Math.round(100*(V-s.restam)/V)+'%"></div></div>';
+    h+=(s.fase==="indo"?"Chega em ":"Volta em ")+'<b class="ouro">'+s.restam+'</b> tick(s)';
+    if(s.fase==="indo") h+='<div style="margin-top:8px;"><button class="mini alerta" style="width:100%;" onclick="recuarSlot('+s.idx+')">RECUAR</button></div>';
+    h+='</div>';
+  }
+  return h+'</div>';
+}
+function cardPesq(id){
+  const p=DADOS.PESQ[id]; const feita=EST.pesquisas.includes(id); const ativa=EST.pesqAtivas.find(a=>a.pid===id);
+  const bloq=p.req&&!EST.pesquisas.includes(p.req);
+  return '<div class="pq '+(feita?"feita":"")+' '+(bloq?"bloq":"")+'"><div class="pn">'+p.nome+(feita?' <span class="verde">✓</span>':'')+'</div>'+(p.classe?'<div class="pd">Libera unidades '+p.classe+'.</div>':'<div class="pd">'+(id.startsWith("esp")?"Espiões revelam informações inimigas.":"Contraespiões protegem suas informações.")+'</div>')+'<div class="pc">🪙'+fmt(p.ouro)+' 🪵'+fmt(p.madeira)+' 🌾'+fmt(p.alimento)+' · '+p.ticks+' ticks</div><div class="acao">'+(feita?'':(ativa?'<span class="ouro" style="font-size:11px;">em andamento — '+ativa.restam+' tick(s)</span>':'<button class="mini" '+(bloq?'disabled':'')+' onclick="pesquisar(\''+id+'\')">PESQUISAR</button>'))+'</div></div>';
+}
+async function renderRanking(){
+  try{ const rk=await api("/api/ranking");
+    const c=EST.clan;
+    document.getElementById("ranking-lista").innerHTML=rk.map(r=>{
+      const meu=(r.coord===c.territorio+"."+c.slot);
+      return '<div class="rk-linha '+(meu?"meu":"")+'"><span class="rk-pos">'+r.pos+'</span><span class="rk-info"><span class="rk-cla">'+r.cla+'</span><br><span class="rk-sub">líder '+r.lider+' · '+r.coord+'</span></span><span class="rk-xp">'+fmt(r.xp)+' XP</span></div>';
+    }).join("")||'<div class="cinza" style="padding:14px;">Ranking vazio.</div>';
+  }catch(e){}
+}
+async function renderFundo(){
+  try{ const f=await api("/api/fundo");
+    document.getElementById("fundo-ouro").textContent=fmt(f.fundo.ouro);
+    document.getElementById("fundo-madeira").textContent=fmt(f.fundo.madeira);
+    document.getElementById("fundo-alimento").textContent=fmt(f.fundo.alimento);
+    document.getElementById("gov-lider").textContent=f.lider?(nomeClan(f.clans,f.lider)+" ("+f.lider+")"):"—";
+    document.getElementById("gov-conselheiro").textContent=f.conselheiro?(nomeClan(f.clans,f.conselheiro)+" ("+f.conselheiro+")"):"— (não nomeado)";
+    document.getElementById("tab-votos").innerHTML=f.clans.map(c=>'<div class="fila-item"><span>'+c.nome+' <span class="cinza">'+c.coord+'</span></span><span>'+c.votos+' voto(s)'+(f.lider===c.coord?' 👑':'')+'</span></div>').join("");
+    document.getElementById("sel-voto").innerHTML=f.clans.map(c=>'<option value="'+c.coord+'"'+(f.meuVoto===c.coord?" selected":"")+'>'+c.nome+'</option>').join("");
+    document.getElementById("caixa-nomear").style.display=f.souLider?"block":"none";
+    if(f.souLider) document.getElementById("sel-conselheiro").innerHTML=f.clans.map(c=>'<option value="'+c.coord+'"'+(f.conselheiro===c.coord?" selected":"")+'>'+c.nome+'</option>').join("");
+    document.getElementById("fundo-permissao").textContent=f.podeRetirar?"— você tem permissão":"— só líder/conselheiro";
+    document.getElementById("btn-retirar").disabled=!f.podeRetirar;
+  }catch(e){}
+}
+function nomeClan(clans,coord){ const c=clans.find(x=>x.coord===coord); return c?c.nome:coord; }
+
+// ---------- PÚBLICAS ----------
+async function abrirUnidadesPub(){
+  await carregarDados();
+  let h='<div class="secao-h">TABELA DE UNIDADES</div>';
+  for(const[raca,unidades]of Object.entries(DADOS.RACAS)){ h+='<div class="secao-h">'+raca.toUpperCase()+'</div>'; for(const[n,a]of Object.entries(unidades)){ const u=U(a);
+    h+='<div class="ucard"><div class="cab" onclick="this.parentElement.classList.toggle(\'aberta\')"><span class="unome">'+n+'</span><span class="badge">'+u.classe+'</span><span class="custo">🪙'+u.ouro+' 🪵'+u.madeira+' 🌾'+u.alimento+'<br>'+u.turno+' ticks</span></div><div class="corpo"><div class="ustats"><span>Ini<b>'+u.ini+'</b></span><span>Def<b>'+u.def+'</b></span><span>Atq<b>'+u.atq+'</b></span><span>QAtq<b>'+u.qatq+'</b></span><span>Dano<b>'+u.dano+'</b></span><span>Vida<b>'+u.vida+'</b></span><span>Xp<b>'+u.xp+'</b></span></div></div></div>'; } }
+  document.getElementById("pub-conteudo").innerHTML=h; irPara("tela-pub");
+}
+async function abrirRankingPub(){
+  try{ const rk=await api("/api/ranking");
+    let h='<div class="secao-h">🏆 TÍTULO — RANKING DO ROUND</div>';
+    h+=rk.length?rk.map(r=>'<div class="rk-linha"><span class="rk-pos">'+r.pos+'</span><span class="rk-info"><span class="rk-cla">'+r.cla+'</span><br><span class="rk-sub">líder '+r.lider+' · '+r.coord+'</span></span><span class="rk-xp">'+fmt(r.xp)+' XP</span></div>').join(""):'<div class="cinza" style="padding:14px;">O round ainda não começou.</div>';
+    document.getElementById("pub-conteudo").innerHTML=h; irPara("tela-pub");
+  }catch(e){ toast(e.message); }
+}
+
+// ---------- INÍCIO ----------
+(async function(){
+  await carregarDados();
+  // estado do round na home
+  try{
+    const rk=await api("/api/ranking");
+    document.getElementById("home-round").innerHTML='<div class="rb-t">Round Beta</div><div>◷ Clãs no mundo: '+rk.length+'</div><div>Entre com seu código de convite.</div>';
+  }catch(e){}
+  // sessão salva?
+  if(TOKEN){ try{ EST=await api("/api/estado"); irPara("tela-jogo"); render(); iniciarPolling(); }catch(e){ localStorage.removeItem("primordio_token"); TOKEN=null; } }
+})();
+</script>
+</body>
+</html>

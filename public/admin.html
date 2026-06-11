@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Primórdio — Administração</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #000; }
+  body { min-height:100vh; color:#d8c98e; font-family:Verdana,Geneva,sans-serif; font-weight:600; font-size:14px; margin:0; }
+  .wrap { max-width:600px; margin:0 auto; padding:20px 14px 60px; }
+  h1 { font-family:Georgia,serif; color:#f0d469; letter-spacing:.12em; font-size:26px; text-align:center; text-shadow:0 0 18px rgba(80,200,80,.4); }
+  h1 .sub { display:block; font-size:11px; letter-spacing:.4em; color:#cdbd7a; margin-top:6px; }
+  button { background:linear-gradient(180deg,#3a5226,#243617 45%,#16230e); color:#e8c75a; border:2px solid #060906; outline:1px solid #4a6b38; font-family:Georgia,serif; font-weight:700; letter-spacing:.1em; padding:12px 18px; border-radius:4px; cursor:pointer; font-size:13px; box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 5px #000; min-height:44px; }
+  button:hover { background:linear-gradient(180deg,#48642f,#2c421d 45%,#1a2a12); color:#f4d97a; }
+  button.alerta { outline-color:#d47a5a; color:#f0a98a; }
+  button.destaque { outline-color:#7ad4d4; color:#aef0f0; }
+  input { background:#060906; color:#e8c75a; border:1px solid #6b6f50; border-radius:3px; padding:11px 12px; font-family:inherit; font-weight:700; font-size:15px; min-height:44px; width:100%; }
+  .painel { background:#070a06; border:1px solid #2c3f24; border-radius:6px; padding:16px; margin-bottom:16px; box-shadow:inset 0 0 30px rgba(0,0,0,.7); }
+  .secao-h { font-family:Georgia,serif; color:#e8c75a; font-size:13px; letter-spacing:.16em; margin:0 0 12px; border-bottom:1px solid #3a5226; padding-bottom:6px; }
+  .ouro{color:#e8c75a;} .verde{color:#9fd48a;} .cinza{color:#8a8a6a;font-weight:400;} .laranja{color:#e09a5a;}
+  .campo { margin-bottom:12px; } .campo label { display:block; font-size:10px; color:#9a8d5a; margin-bottom:5px; letter-spacing:.18em; }
+  .status-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px; }
+  .status-grid .box { border:1px solid #2c3f24; border-radius:5px; padding:10px; text-align:center; }
+  .status-grid .box b { display:block; color:#e8c75a; font-size:20px; font-family:Georgia,serif; margin-top:4px; }
+  .botoes { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .botoes button { width:100%; }
+  .convite-lista { max-height:280px; overflow-y:auto; margin-top:10px; }
+  .conv { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #10160c; font-family:monospace; font-size:13px; }
+  .conv.usado { opacity:.45; }
+  .conv .cod { color:#e8c75a; letter-spacing:.05em; } .conv .st { font-size:10px; }
+  .nota { color:#8a8a6a; font-size:10px; line-height:1.6; margin-top:10px; font-weight:400; }
+  .gate { max-width:380px; margin:60px auto; }
+  #toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#141c0a; color:#e8c75a; border:1px solid #e8c75a; border-radius:6px; padding:12px 20px; font-size:12px; display:none; z-index:50; max-width:92vw; text-align:center; }
+  .copia { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="wrap">
+  <h1>PRIMÓRDIO<span class="sub">ADMINISTRAÇÃO</span></h1>
+
+  <!-- gate da chave admin -->
+  <div id="gate" class="gate painel">
+    <div class="secao-h">CHAVE DE ADMINISTRAÇÃO</div>
+    <div class="campo"><input type="password" id="adm-key" placeholder="ADMIN_KEY"></div>
+    <button class="destaque" style="width:100%;" onclick="entrar()">ENTRAR</button>
+    <p class="nota">É a variável de ambiente ADMIN_KEY que você definiu no deploy. A chave fica salva só neste navegador.</p>
+  </div>
+
+  <!-- painel -->
+  <div id="painel" style="display:none;">
+    <div class="painel">
+      <div class="secao-h">ESTADO DO ROUND</div>
+      <div class="status-grid">
+        <div class="box">STATUS<b id="s-status">—</b></div>
+        <div class="box">TICK<b id="s-tick">—</b></div>
+        <div class="box">CLÃS<b id="s-clans">—</b></div>
+        <div class="box">RITMO<b id="s-ritmo">—</b></div>
+      </div>
+    </div>
+
+    <div class="painel">
+      <div class="secao-h">CONTROLE</div>
+      <div class="botoes">
+        <button onclick="round('criar')">CRIAR ROUND</button>
+        <button class="destaque" onclick="round('iniciar')">INICIAR</button>
+        <button onclick="round('pausar')" id="btn-pausar">PAUSAR / RETOMAR</button>
+        <button onclick="round('tick_manual')">▸ FORÇAR 1 TICK</button>
+        <button class="alerta" onclick="round('encerrar')">ENCERRAR</button>
+        <button class="alerta" onclick="confirmarReset()">RESETAR MUNDO</button>
+      </div>
+      <div class="campo" style="margin-top:14px;"><label>DURAÇÃO (TICKS) — ao criar</label><input type="number" id="cfg-duracao" value="1440"></div>
+      <div class="campo"><label>RITMO DO TICK (SEGUNDOS)</label>
+        <div style="display:flex; gap:8px;"><input type="number" id="cfg-ritmo" value="120"><button onclick="round('ritmo')" style="white-space:nowrap;">APLICAR</button></div></div>
+      <p class="nota">Beta sugerido: 120s/tick (2 min). "Forçar 1 tick" avança o mundo na hora, útil para testar. Resetar apaga todos os clãs e libera os convites de novo.</p>
+    </div>
+
+    <div class="painel">
+      <div class="secao-h">CONVITES</div>
+      <div style="display:flex; gap:8px;"><input type="number" id="qtd-convites" value="10" min="1" max="100"><button class="destaque" onclick="gerarConvites()" style="white-space:nowrap;">GERAR</button></div>
+      <div class="copia" id="ultimos-convites"></div>
+      <div class="convite-lista" id="lista-convites"></div>
+      <p class="nota">Cada código serve para um clã. Distribua os links: o jogador entra em <span class="ouro" id="url-jogo">/</span> e digita o código.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+let KEY=localStorage.getItem("primordio_admin_key")||null;
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",3000); }
+async function api(path, body){
+  const opt={ method: body?"POST":"GET", headers:{"Content-Type":"application/json","x-admin-key":KEY} };
+  if(body) opt.body=JSON.stringify(body);
+  const r=await fetch(path,opt); const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.erro||("Erro "+r.status));
+  return j;
+}
+function entrar(){
+  KEY=document.getElementById("adm-key").value.trim();
+  if(!KEY){ toast("Informe a chave."); return; }
+  localStorage.setItem("primordio_admin_key",KEY);
+  carregar();
+}
+async function carregar(){
+  try{
+    const d=await api("/api/admin/estado");
+    document.getElementById("gate").style.display="none";
+    document.getElementById("painel").style.display="block";
+    document.getElementById("s-status").textContent=d.round.status.toUpperCase();
+    document.getElementById("s-tick").textContent=d.round.tick+"/"+d.round.duracao;
+    document.getElementById("s-clans").textContent=d.nClans;
+    document.getElementById("s-ritmo").textContent=d.round.tick_segundos+"s";
+    document.getElementById("url-jogo").textContent=location.origin+"/";
+    const usados=d.convites.filter(c=>c.usado_por).length;
+    document.getElementById("lista-convites").innerHTML=d.convites.length
+      ? d.convites.map(c=>'<div class="conv '+(c.usado_por?"usado":"")+'"><span class="cod">'+c.codigo+'</span><span class="st '+(c.usado_por?"laranja":"verde")+'">'+(c.usado_por?"usado":"livre")+'</span></div>').join("")
+      : '<div class="cinza" style="padding:10px; font-size:12px;">Nenhum convite ainda — gere abaixo.</div>';
+  }catch(e){
+    toast(e.message);
+    if(String(e.message).includes("negado")){ localStorage.removeItem("primordio_admin_key"); KEY=null;
+      document.getElementById("gate").style.display="block"; document.getElementById("painel").style.display="none"; }
+  }
+}
+async function round(acao){
+  try{
+    const body={acao};
+    if(acao==="criar"){ body.duracao=parseInt(document.getElementById("cfg-duracao").value)||1440; body.tick_segundos=parseInt(document.getElementById("cfg-ritmo").value)||120; }
+    if(acao==="ritmo"){ body.tick_segundos=parseInt(document.getElementById("cfg-ritmo").value)||120; }
+    const r=await api("/api/admin/round",body);
+    toast(acao==="tick_manual"?"Tick forçado.":"Ação aplicada: "+acao);
+    carregar();
+  }catch(e){ toast(e.message); }
+}
+function confirmarReset(){ if(confirm("RESETAR o mundo? Isso apaga TODOS os clãs e progresso. Os convites voltam a ficar livres.")) round("resetar"); }
+async function gerarConvites(){
+  try{
+    const q=parseInt(document.getElementById("qtd-convites").value)||10;
+    const r=await api("/api/admin/convites",{quantidade:q});
+    document.getElementById("ultimos-convites").innerHTML=r.codigos.map(c=>'<button class="mini" style="font-family:monospace; padding:6px 10px; min-height:36px;" onclick="copiar(\''+c+'\')">'+c+' ⧉</button>').join("");
+    toast(r.codigos.length+" convite(s) gerado(s) — toque para copiar.");
+    carregar();
+  }catch(e){ toast(e.message); }
+}
+function copiar(txt){ navigator.clipboard?.writeText(txt).then(()=>toast("Copiado: "+txt)).catch(()=>toast(txt)); }
+if(KEY) carregar();
+</script>
+</body>
+</html>
