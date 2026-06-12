@@ -244,6 +244,8 @@
       <div id="mov-saidas"><div class="cinza" style="font-size:11px;">Carregando…</div></div>
     </div>
     <div id="aba-ataques" style="display:none;">
+      <div class="secao-h">🛡️ SEU EXÉRCITO NA BASE</div>
+      <div class="painel" id="resumo-exercito"></div>
       <div class="secao-h">SLOTS DE ENVIO</div>
       <div id="slots-grid"></div>
       <div class="secao-h">RELATÓRIOS</div>
@@ -609,6 +611,10 @@ function interagindo(){
   if(ativo && (ativo.tagName==="INPUT" || ativo.tagName==="SELECT")) return true;
   if(document.querySelector(".ucard.aberta")) return true;
   if(document.getElementById("sheet")?.classList.contains("aberta")) return true;
+  // proteção dos slots de ataque/defesa: se algum campo de tropa OU de coordenada tem algo preenchido,
+  // não redesenhar (senão o polling apaga a seleção antes de enviar)
+  for(const el of document.querySelectorAll('[id^="st-"]')){ if((parseInt(el.value)||0)>0) return true; }
+  for(const el of document.querySelectorAll('[id^="alvo-"]')){ if((el.value||"").trim()!=="") return true; }
   return false;
 }
 async function refresh(){
@@ -668,6 +674,8 @@ function render(){
   // mundo grid
   let mg=""; for(let t=1;t<=DADOS.CONST.TERRITORIOS;t++) mg+='<button class="'+(t===c.territorio?"aqui":"")+'" onclick="verTerritorio('+t+')">'+t+(t===c.territorio?"★":"")+'</button>';
   document.getElementById("mundo-grid").innerHTML=mg;
+  // resumo do exército na base (total, por unidade, XP somado)
+  renderResumoExercito();
   // slots
   document.getElementById("slots-grid").innerHTML=EST.slots.map(cardSlot).join("");
   document.getElementById("relatorios").innerHTML=EST.relatorios.length?EST.relatorios.map(x=>'<div class="relatorio-box"><span class="ouro">[t'+x.tick+']</span> '+x.texto+'</div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma batalha ainda.</div>';
@@ -732,6 +740,29 @@ function tabelaUnidades(){
   html+='<div class="legenda"><b>LdF</b> Linha de Frente · <b>Art</b> Artilharia · <b>Cav</b> Cavalaria · <b>Inf</b> Infantaria · <b>Con</b> Conjuradores · <b>Ala</b> Alados · <b>Pro</b> Prodígios · <b>Mis</b> Místico · <b>MdG</b> Máquinas de Guerra<br>'+
     '<b>A1/A2/A3</b> Alvos por prioridade · <b>Ini</b> Iniciativa (menor = mais rápido) · <b>QAtq</b> Qtd. de ataques · <b>Xp</b> Experiência que concede · <b>🪙🪵🌾</b> custo (ouro/madeira/alimento) · <b>Turno</b> ticks para ficar pronta</div>';
   return html;
+}
+function renderResumoExercito(){
+  const ex=EST.exercito||{};
+  const nomes=Object.keys(ex);
+  const cont=document.getElementById("resumo-exercito");
+  if(!cont) return;
+  if(!nomes.length){ cont.innerHTML='<div class="cinza" style="font-size:12px;">Nenhuma tropa na base.</div>'; return; }
+  let totalTropas=0, totalXP=0, linhas="";
+  // ordena por classe pra leitura
+  const arr=nomes.map(n=>{ const u=statsUnidade(EST.clan.raca,n); return {n, q:ex[n], cls:u.classe, xp:u.xp}; })
+                 .sort((a,b)=>a.cls.localeCompare(b.cls)||a.n.localeCompare(b.n));
+  for(const it of arr){
+    totalTropas+=it.q; totalXP+=it.q*it.xp;
+    linhas+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;border-bottom:1px solid rgba(90,120,60,.12);">'+
+      '<span><b class="ouro">'+it.q+'</b> × '+it.n+' <span class="cinza" style="font-size:10px;">('+it.cls+')</span></span>'+
+      '<span class="cinza" style="font-size:10px;">'+fmt(it.q*it.xp)+' XP</span></div>';
+  }
+  cont.innerHTML=
+    '<div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:8px;">'+
+      '<div><div class="ouro" style="font-size:22px;">'+fmt(totalTropas)+'</div><div class="cinza" style="font-size:9px;">TROPAS NA BASE</div></div>'+
+      '<div><div class="verde" style="font-size:22px;">'+fmt(totalXP)+'</div><div class="cinza" style="font-size:9px;">XP DO EXÉRCITO</div></div>'+
+    '</div>'+linhas+
+    '<div class="nota">O XP é o valor total que seu exército concede se for derrotado — quanto maior, mais você protege ou arrisca.</div>';
 }
 function cardSlot(s){
   let h='<div class="slot-card '+(s.fase!=="base"?"ativo":"")+'"><h4>SLOT '+(s.idx+1)+'<span class="cinza" style="font-size:10px;">'+(s.fase==="base"?"na base":s.fase==="indo"?"→ "+s.alvo:"retornando")+'</span></h4>';
