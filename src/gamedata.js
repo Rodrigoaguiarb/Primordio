@@ -130,7 +130,10 @@ export const PESQ = {
   esp1:{nome:"Espionagem I",classe:null,ouro:1500,madeira:500,alimento:500,ticks:16,req:null,cadeia:"e"},
   esp2:{nome:"Espionagem II",classe:null,ouro:4000,madeira:1500,alimento:1500,ticks:32,req:"esp1",cadeia:"e"},
   ctr1:{nome:"Contraespionagem I",classe:null,ouro:1500,madeira:500,alimento:500,ticks:16,req:null,cadeia:"e"},
-  ctr2:{nome:"Contraespionagem II",classe:null,ouro:4000,madeira:1500,alimento:1500,ticks:32,req:"ctr1",cadeia:"e"}
+  ctr2:{nome:"Contraespionagem II",classe:null,ouro:4000,madeira:1500,alimento:1500,ticks:32,req:"ctr1",cadeia:"e"},
+  tdv1:{nome:"Velocidade I",classe:null,ouro:1200,madeira:600,alimento:600,ticks:16,req:null,cadeia:"v"},
+  tdv2:{nome:"Velocidade II",classe:null,ouro:3000,madeira:1500,alimento:1500,ticks:32,req:"tdv1",cadeia:"v"},
+  tdv3:{nome:"Velocidade III",classe:null,ouro:6000,madeira:3000,alimento:3000,ticks:48,req:"tdv2",cadeia:"v"}
 };
 
 export const NIVEIS = [[1,0],[2,500],[3,1500],[4,3500],[5,7000],[6,13000],[7,22000],[8,36000],[9,56000],[10,85000]];
@@ -154,8 +157,9 @@ export const ESPIONAGEM = {
   PERDA_FALHA: 0.10,     // perde 10% dos espiões enviados se falhar
   // tipos de relatório e seus custos de recurso por tentativa
   TIPOS: {
-    recursos: { nome:"Recursos", custo:{ouro:200, madeira:0, alimento:200} },
-    tropas:   { nome:"Tropas",   custo:{ouro:400, madeira:0, alimento:300} }
+    recursos:     { nome:"Recursos",     custo:{ouro:200, madeira:0, alimento:200} },
+    tropas:       { nome:"Tropas",       custo:{ouro:400, madeira:0, alimento:300} },
+    movimentacao: { nome:"Movimentação", custo:{ouro:400, madeira:0, alimento:300} }
   }
 };
 
@@ -193,8 +197,36 @@ export const CONST = {
   TAXA_ROUBO_MERC: 0.2,   // 2 a cada 10 mercenários
   TERRITORIOS: 10,        // mundo do beta
   SLOTS_POR_TERRITORIO: 10,
-  PESQUISA_INICIAL: "ldf" // já vem concluída
+  PESQUISA_INICIAL: "ldf", // já vem concluída
+  // --- TDV (Tempo de Viagem) ---
+  TDV_ATAQUE_BASE: 11,    // ticks de ataque sem pesquisas
+  TDV_DEFESA_BASE: 4,     // ticks de defesa (reforço) no mesmo território
+  TDV_PISO: 7             // nunca menos que isto (Ferlix + 3 pesquisas)
 };
+
+// Classes consideradas N3 (exigem o 3º nível de pesquisa) — viajam +1 TDV.
+export const CLASSES_N3 = ["Pro", "Mis", "MdG"];
+
+// Calcula o TDV de uma EXPEDIÇÃO (slot pode ter tropas misturadas → vale o mais lento).
+// modo: "ataque" | "defesa". Para defesa fora do território, o chamador deve passar "ataque".
+// pesquisasTDV: 0..3 (quantas pesquisas de Velocidade o clã tem). raca: nome da raça.
+export function tdvExpedicao(tropas, raca, pesquisasTDV, modo) {
+  const base = modo === "defesa" ? CONST.TDV_DEFESA_BASE : CONST.TDV_ATAQUE_BASE;
+  const reducaoPesquisa = modo === "defesa" ? 0 : Math.min(3, pesquisasTDV || 0); // pesquisa só afeta ataque
+  const bonusFerlix = raca === "Ferlix" ? 1 : 0;
+  // a tropa mais lenta do slot define o +1 de N3
+  let temN3 = false;
+  for (const nome of Object.keys(tropas || {})) {
+    if (!tropas[nome]) continue;
+    const cls = nome === "Mercenário" ? "LdF" : classeDaUnidade(raca, nome); // mercenário = N1
+    if (CLASSES_N3.includes(cls)) temN3 = true;
+  }
+  const n3 = temN3 ? 1 : 0;
+  let tdv = base - reducaoPesquisa - bonusFerlix + n3;
+  // piso só se aplica ao ataque (defesa base 4 pode chegar a 3 nos Ferlix, como definido)
+  if (modo !== "defesa") tdv = Math.max(CONST.TDV_PISO, tdv);
+  return Math.max(1, tdv);
+}
 
 export const U = a => ({
   classe:a[0], a1:a[1], a2:a[2], a3:a[3], ini:a[4], def:a[5], atq:a[6], qatq:a[7],

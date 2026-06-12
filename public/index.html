@@ -312,6 +312,7 @@
         <select id="esp-tipo" style="width:100%; margin:4px 0 10px;">
           <option value="recursos">Recursos (ouro / madeira / alimento na base)</option>
           <option value="tropas">Tropas (tipo e quantidade na base)</option>
+          <option value="movimentacao">Movimentação (ataques e defesas em trânsito)</option>
         </select>
         <label class="cinza" style="font-size:11px;">Quantos espiões enviar</label>
         <input id="esp-qtd" type="number" min="1" value="1" style="width:100%; margin:4px 0 10px;" oninput="previewEsp()">
@@ -574,6 +575,18 @@ function mostrarRelatorioEsp(r){
     h+='<div class="verde" style="margin-bottom:6px;">✓ Missão bem-sucedida!</div>';
     if(r.revelacao.tipo==="recursos"){
       h+='<div>🪙 Ouro: <b>'+fmt(r.revelacao.ouro)+'</b><br>🪵 Madeira: <b>'+fmt(r.revelacao.madeira)+'</b><br>🌾 Alimento: <b>'+fmt(r.revelacao.alimento)+'</b></div>';
+    } else if(r.revelacao.tipo==="movimentacao"){
+      const sa=r.revelacao.saidas||[], ch=r.revelacao.chegando||[];
+      const txtTotal=t=>t>0?(fmt(t)+' tropa(s)'):'<span class="laranja">INDISPONÍVEL</span>';
+      h+='<div style="font-size:11px;" class="cinza">O que o alvo está fazendo:</div>';
+      if(!sa.length) h+='<div class="cinza" style="font-size:12px;">Nenhuma expedição em trânsito.</div>';
+      else h+=sa.map(s=>{
+        const rot=s.fase==="reforcando"?"🛡️ reforçando "+(s.alvoNome||s.alvo):s.fase==="indo"?"🗡️ atacando "+(s.alvoNome||s.alvo):"↩️ voltando";
+        return '<div style="font-size:12px;">'+rot+' — '+txtTotal(s.totalTropas)+' · '+s.ticks+' tick(s)</div>';
+      }).join("");
+      h+='<div style="font-size:11px;margin-top:8px;" class="cinza">Quem está indo contra o alvo:</div>';
+      if(!ch.length) h+='<div class="verde" style="font-size:12px;">Ninguém atacando o alvo.</div>';
+      else h+=ch.map(a=>'<div style="font-size:12px;">⚠️ <b class="laranja">'+a.atacante+'</b> — '+txtTotal(a.totalTropas)+' · '+a.ticks+' tick(s)</div>').join("");
     } else {
       const pc=r.revelacao.porClasse||{};
       const linhas=Object.entries(pc).map(([cls,q])=>fmt(q)+' '+cls).join(', ');
@@ -665,8 +678,8 @@ function render(){
   const ex=Object.entries(EST.exercito);
   document.getElementById("exercito").innerHTML=ex.length?ex.map(([n,q])=>'<div class="fila-item"><span>'+n+'</span><span class="ouro">×'+q+'</span></div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma tropa na base.</div>';
   // pesquisas
-  let ch=""; for(const cad of [1,2,3,"e"]){ const ids=Object.keys(DADOS.PESQ).filter(id=>DADOS.PESQ[id].cadeia===cad);
-    const titulo={1:"⚔ CAMINHO DA FRENTE",2:"🏹 CAMINHO DO ARCANO",3:"🐎 CAMINHO DA MONTARIA",e:"🕵 ESPIONAGEM"}[cad];
+  let ch=""; for(const cad of [1,2,3,"e","v"]){ const ids=Object.keys(DADOS.PESQ).filter(id=>DADOS.PESQ[id].cadeia===cad);
+    const titulo={1:"⚔ CAMINHO DA FRENTE",2:"🏹 CAMINHO DO ARCANO",3:"🐎 CAMINHO DA MONTARIA",e:"🕵 ESPIONAGEM",v:"⚡ VELOCIDADE (TDV)"}[cad];
     ch+='<div class="cadeia-t">'+titulo+'</div>'+ids.map((id,i)=>cardPesq(id)+(i<ids.length-1&&cad!=="e"?'<div class="seta-cadeia">▼</div>':'')).join(""); }
   document.getElementById("cadeias").innerHTML=ch;
   document.getElementById("fila-pesquisas").innerHTML=EST.pesqAtivas.length?EST.pesqAtivas.map(a=>'<div class="fila-item"><span>'+DADOS.PESQ[a.pid].nome+'</span><span class="ouro">'+a.restam+' tick(s)</span></div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma em andamento.</div>';
@@ -742,7 +755,12 @@ function cardSlot(s){
 function cardPesq(id){
   const p=DADOS.PESQ[id]; const feita=EST.pesquisas.includes(id); const ativa=EST.pesqAtivas.find(a=>a.pid===id);
   const bloq=p.req&&!EST.pesquisas.includes(p.req);
-  return '<div class="pq '+(feita?"feita":"")+' '+(bloq?"bloq":"")+'"><div class="pn">'+p.nome+(feita?' <span class="verde">✓</span>':'')+'</div>'+(p.classe?'<div class="pd">Libera unidades '+p.classe+'.</div>':'<div class="pd">'+(id.startsWith("esp")?"Espiões revelam informações inimigas.":"Contraespiões protegem suas informações.")+'</div>')+'<div class="pc">🪙'+fmt(p.ouro)+' 🪵'+fmt(p.madeira)+' 🌾'+fmt(p.alimento)+' · '+p.ticks+' ticks</div><div class="acao">'+(feita?'':(ativa?'<span class="ouro" style="font-size:11px;">em andamento — '+ativa.restam+' tick(s)</span>':'<button class="mini" '+(bloq?'disabled':'')+' onclick="pesquisar(\''+id+'\')">PESQUISAR</button>'))+'</div></div>';
+  let desc;
+  if(p.classe) desc='Libera unidades '+p.classe+'.';
+  else if(id.startsWith("tdv")) desc='Reduz 1 TDV de ataque de todas as suas tropas.';
+  else if(id.startsWith("esp")) desc='Espiões revelam informações inimigas.';
+  else desc='Contraespiões protegem suas informações.';
+  return '<div class="pq '+(feita?"feita":"")+' '+(bloq?"bloq":"")+'"><div class="pn">'+p.nome+(feita?' <span class="verde">✓</span>':'')+'</div><div class="pd">'+desc+'</div><div class="pc">🪙'+fmt(p.ouro)+' 🪵'+fmt(p.madeira)+' 🌾'+fmt(p.alimento)+' · '+p.ticks+' ticks</div><div class="acao">'+(feita?'':(ativa?'<span class="ouro" style="font-size:11px;">em andamento — '+ativa.restam+' tick(s)</span>':'<button class="mini" '+(bloq?'disabled':'')+' onclick="pesquisar(\''+id+'\')">PESQUISAR</button>'))+'</div></div>';
 }
 async function renderRanking(){
   try{ const rk=await api("/api/ranking");

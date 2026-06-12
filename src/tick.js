@@ -3,7 +3,7 @@
 // para todos os clãs de uma vez, dentro de uma transação.
 // ============================================================
 import { db } from "./db.js";
-import { CONST, PESQ, nivelPorXP } from "./gamedata.js";
+import { CONST, PESQ, nivelPorXP, tdvExpedicao } from "./gamedata.js";
 import { resolverBatalha } from "./combat.js";
 
 function getRound() { return db.prepare("SELECT * FROM round WHERE id = 1").get(); }
@@ -131,20 +131,24 @@ function resolverChegada(s, tick) {
   const alvo = clanEmCoord(s.alvo);
   const tropasAtk = JSON.parse(s.tropas || "{}");
 
+  // TDV de volta: usa as tropas e as pesquisas de velocidade do atacante (volta = mesmo custo de ataque)
+  const pesqTDV = db.prepare("SELECT COUNT(*) n FROM pesquisas WHERE clan_id=? AND pid IN ('tdv1','tdv2','tdv3')").get(s.clan_id).n;
+  const tdvVolta = (tropas) => tdvExpedicao(tropas, atacante.raca, pesqTDV, "ataque");
+
   const registrar = (txt) => db.prepare("INSERT INTO relatorios (clan_id, tick, texto, criado_em) VALUES (?,?,?,?)")
     .run(s.clan_id, tick, txt, Date.now());
 
   // alvo inexistente, vazio ou aliado (mesmo território) → retorno imediato
   if (!alvo || alvo.territorio === atacante.territorio) {
     registrar(`Chegou em ${s.alvo} e não encontrou alvo inimigo válido — retorno imediato.`);
-    db.prepare("UPDATE slots SET fase='voltando', restam=? WHERE clan_id=? AND idx=?").run(CONST.VIAGEM, s.clan_id, s.idx);
+    db.prepare("UPDATE slots SET fase='voltando', restam=? WHERE clan_id=? AND idx=?").run(tdvVolta(tropasAtk), s.clan_id, s.idx);
     return;
   }
 
   // defensor protegido → não pode ser atacado
   if (alvo.protecao > 0) {
     registrar(`Alvo ${s.alvo} está sob proteção de iniciante — ataque cancelado, retorno imediato.`);
-    db.prepare("UPDATE slots SET fase='voltando', restam=? WHERE clan_id=? AND idx=?").run(CONST.VIAGEM, s.clan_id, s.idx);
+    db.prepare("UPDATE slots SET fase='voltando', restam=? WHERE clan_id=? AND idx=?").run(tdvVolta(tropasAtk), s.clan_id, s.idx);
     return;
   }
 
@@ -190,9 +194,9 @@ function resolverChegada(s, tick) {
     }
   }
 
-  // slot inicia retorno com sobreviventes + carga roubada
+  // slot inicia retorno com sobreviventes + carga roubada (TDV calculado pelos sobreviventes)
   db.prepare("UPDATE slots SET fase='voltando', tropas=?, carga=?, restam=? WHERE clan_id=? AND idx=?")
-    .run(JSON.stringify(r.sobreviventesAtk), r.roubados, CONST.VIAGEM, s.clan_id, s.idx);
+    .run(JSON.stringify(r.sobreviventesAtk), r.roubados, tdvVolta(r.sobreviventesAtk), s.clan_id, s.idx);
 
   const relAtk = `⚔ Ataque a ${s.alvo} (${alvo.nome}, nível ${alvo.nivel}): você abateu ${r.mortosDef}, perdeu ${r.mortosAtk}. XP +${ganhoAtk}${fator < 1 ? " (alvo 3+ níveis abaixo)" : ""}${r.roubados > 0 ? ` · roubou ${r.roubados} trabalhador(es)` : ""}. Sobreviventes em retorno.`;
   const relDef = `🛡 Você foi atacado por ${atacante.nome} (${atacante.territorio}.${atacante.slot}): perdeu ${r.mortosDef} tropa(s)${r.roubados > 0 ? ` e ${r.roubados} trabalhador(es)` : ""}, abateu ${r.mortosAtk} do inimigo. XP +${ganhoDef}.`;

@@ -11,7 +11,7 @@ import { iniciarAgendador, processarTick } from "./tick.js";
 import {
   RACAS, MERC, DESCR, PESQ, CONST, NIVEIS,
   ESPIOES, ESPIONAGEM, chanceEspionagem, forcaEspionagem,
-  statsUnidade, classeDaUnidade, pesquisaDaClasse, nivelPorXP
+  statsUnidade, classeDaUnidade, pesquisaDaClasse, nivelPorXP, tdvExpedicao
 } from "./gamedata.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -28,6 +28,12 @@ app.get("/admin", (req, res) => res.sendFile(join(__dirname, "..", "public", "ad
 const ADMIN_KEY = process.env.ADMIN_KEY || "troque-esta-chave";
 const agora = () => Date.now();
 const getRound = () => db.prepare("SELECT * FROM round WHERE id=1").get();
+
+// Conta quantas pesquisas de Velocidade (tdv1/tdv2/tdv3) o clã concluiu (0..3).
+function contarPesquisasTDV(clanId) {
+  const row = db.prepare("SELECT COUNT(*) n FROM pesquisas WHERE clan_id=? AND pid IN ('tdv1','tdv2','tdv3')").get(clanId);
+  return row ? row.n : 0;
+}
 
 // resolve clã pela sessão (header x-token)
 function clanDoToken(req) {
@@ -230,14 +236,16 @@ app.post("/api/atacar", (req, res) => {
   if (total === 0) return res.status(400).json({ erro: "Aloque pelo menos uma tropa." });
 
   const round = getRound();
+  const pesqTDV = contarPesquisasTDV(c.id);
+  const tdv = tdvExpedicao(env, c.raca, pesqTDV, "ataque");
   db.transaction(() => {
     for (const [u, q] of Object.entries(env)) {
       db.prepare("UPDATE exercito SET qtd=qtd-? WHERE clan_id=? AND unidade=?").run(q, c.id, u);
     }
     db.prepare("UPDATE slots SET fase='indo', alvo=?, tropas=?, restam=?, carga=0 WHERE clan_id=? AND idx=?")
-      .run(alvo, JSON.stringify(env), CONST.VIAGEM, c.id, idx);
+      .run(alvo, JSON.stringify(env), tdv, c.id, idx);
   })();
-  res.json({ ok: true });
+  res.json({ ok: true, tdv });
 });
 
 // ---------- ESPIONAR ----------
@@ -275,6 +283,11 @@ app.post("/api/espionar", (req, res) => {
     if (sucesso) {
       if (tipo === "recursos") {
         revelacao = { tipo: "recursos", ouro: alvoClan.ouro, madeira: alvoClan.madeira, alimento: alvoClan.alimento };
+      } else if (tipo === "movimentacao") {
+        // movimentação do alvo: saídas + ataques chegando, MESMO formato da aba (nº de tropas + TDV).
+        // Respeita o bônus Norfss (tropas raciais Norfss continuam ocultas).
+        const mov = calcularMovimentacao(alvoClan);
+        revelacao = { tipo: "movimentacao", saidas: mov.saidas, chegando: mov.chegando };
       } else {
         // tropas: só o que está NA BASE (exercito). Tropa viajando em slots não conta.
         const naBase = db.prepare("SELECT unidade, qtd FROM exercito WHERE clan_id=? AND qtd>0").all(alvoClan.id);
@@ -315,7 +328,8 @@ app.post("/api/espionar-previa", (req, res) => {
   res.json({ ok: true, chance, forca, bonus, enviar });
 });
 
-// ---------- REFORÇO: enviar tropas para defender um aliado do mesmo território ----------
+// ---------- REFORÇO: enviar tropas para defender um aliado ----------
+// Mesmo território: TDV de defesa (rápido). Fora do território: TDV de ataque (privilegia jogar perto).
 app.post("/api/reforcar", (req, res) => {
   const c = exigeClan(req, res); if (!c) return;
   const { idx, alvo, tropas } = req.body || {};
@@ -327,9 +341,8 @@ app.post("/api/reforcar", (req, res) => {
   if (!t || !s || t < 1 || t > CONST.TERRITORIOS || s < 1 || s > CONST.SLOTS_POR_TERRITORIO)
     return res.status(400).json({ erro: "Coordenada inválida." });
   if (t === c.territorio && s === c.slot) return res.status(400).json({ erro: "Você não reforça a si mesmo." });
-  if (t !== c.territorio) return res.status(400).json({ erro: "Só é possível reforçar aliados do seu próprio território." });
   const aliado = db.prepare("SELECT * FROM clans WHERE territorio=? AND slot=?").get(t, s);
-  if (!aliado) return res.status(400).json({ erro: "Não há aliado nessa coordenada." });
+  if (!aliado) return res.status(400).json({ erro: "Não há clã nessa coordenada para defender." });
 
   // valida tropas contra o exército real
   const env = {}; let total = 0;
@@ -340,65 +353,67 @@ app.post("/api/reforcar", (req, res) => {
   }
   if (total === 0) return res.status(400).json({ erro: "Aloque pelo menos uma tropa." });
 
+  // Mesmo território → TDV de defesa (rápido). Fora → TDV de ataque.
+  const mesmoTerr = (t === c.territorio);
+  const pesqTDV = contarPesquisasTDV(c.id);
+  const tdv = tdvExpedicao(env, c.raca, pesqTDV, mesmoTerr ? "defesa" : "ataque");
+
   db.transaction(() => {
     for (const [u, q] of Object.entries(env)) {
       db.prepare("UPDATE exercito SET qtd=qtd-? WHERE clan_id=? AND unidade=?").run(q, c.id, u);
     }
-    // fase 'reforcando', TDV menor; guarda o destino em 'alvo'
     db.prepare("UPDATE slots SET fase='reforcando', alvo=?, tropas=?, restam=?, carga=0 WHERE clan_id=? AND idx=?")
-      .run(alvo, JSON.stringify(env), CONST.VIAGEM_REFORCO, c.id, idx);
+      .run(alvo, JSON.stringify(env), tdv, c.id, idx);
   })();
-  res.json({ ok: true });
+  res.json({ ok: true, tdv, mesmoTerritorio: mesmoTerr });
 });
 
-// ---------- MOVIMENTAÇÃO: tudo em trânsito (minhas saídas + ataques chegando) ----------
-app.get("/api/movimentacao", (req, res) => {
-  const c = exigeClan(req, res); if (!c) return;
-  const minhaCoord = c.territorio + "." + c.slot;
+// Calcula a "movimentação" de um clã (saídas + ataques chegando), aplicando o bônus Norfss.
+// Usado tanto pela aba Movimentação (próprio clã) quanto pela espionagem de movimentação (alvo).
+function calcularMovimentacao(clan) {
+  const coord = clan.territorio + "." + clan.slot;
+  const racaisNorfss = RACAS["Norfss"] || {};
+  const contaVisivel = (tropas, raca) => {
+    if (raca === "Norfss") {
+      let v = 0;
+      for (const [u, q] of Object.entries(tropas)) if (!racaisNorfss[u]) v += q;
+      return v; // unidades raciais Norfss ficam ocultas
+    }
+    return Object.values(tropas).reduce((a, b) => a + b, 0);
+  };
 
-  // Minhas expedições (slots indo/voltando)
-  const meusSlots = db.prepare("SELECT idx, fase, alvo, tropas, restam, carga FROM slots WHERE clan_id=? AND fase!='base' ORDER BY idx").all(c.id);
+  const meusSlots = db.prepare("SELECT idx, fase, alvo, tropas, restam, carga FROM slots WHERE clan_id=? AND fase!='base' ORDER BY idx").all(clan.id);
   const saidas = meusSlots.map(s => {
     const tropas = s.tropas ? JSON.parse(s.tropas) : {};
-    const total = Object.values(tropas).reduce((a, b) => a + b, 0);
     let alvoNome = null;
     if (s.alvo) {
       const [t, sl] = s.alvo.split(".").map(Number);
       const ac = db.prepare("SELECT nome FROM clans WHERE territorio=? AND slot=?").get(t, sl);
       alvoNome = ac ? ac.nome : null;
     }
-    return { idx: s.idx, fase: s.fase, alvo: s.alvo, alvoNome, ticks: s.restam, totalTropas: total, carga: s.carga };
+    return { idx: s.idx, fase: s.fase, alvo: s.alvo, alvoNome, ticks: s.restam,
+      totalTropas: contaVisivel(tropas, clan.raca), carga: s.carga };
   });
 
-  // Ataques inimigos vindo CONTRA mim: cada slot de cada clã é uma linha separada.
-  // O defensor vê só NOME, TOTAL de tropas (somado, sem tipo) e TDV.
-  // Bônus racial Norfss: o total chega como "INDISPONÍVEL" (defensor não sabe quantos vêm).
   const incomingRows = db.prepare(`
     SELECT s.idx, s.restam, s.tropas, cl.nome AS atacante, cl.raca
     FROM slots s JOIN clans cl ON cl.id = s.clan_id
     WHERE s.fase='indo' AND s.alvo=? AND s.clan_id<>?
     ORDER BY s.restam ASC, cl.nome ASC, s.idx ASC
-  `).all(minhaCoord, c.id);
+  `).all(coord, clan.id);
   const chegando = incomingRows.map(r => {
     const tropas = r.tropas ? JSON.parse(r.tropas) : {};
-    const totalReal = Object.values(tropas).reduce((a, b) => a + b, 0);
-    let mostrar;
-    if (r.raca === "Norfss") {
-      // Bônus Norfss: as unidades RACIAIS dele são invisíveis na movimentação.
-      // Só contam as unidades que NÃO são da raça Norfss (ex: Mercenário comum) — a "isca".
-      const racaisNorfss = RACAS["Norfss"] || {};
-      let visiveis = 0;
-      for (const [u, q] of Object.entries(tropas)) {
-        if (!racaisNorfss[u]) visiveis += q;  // não é unidade racial Norfss => aparece
-      }
-      mostrar = visiveis; // pode ser 0 (nada visível) ou o nº de iscas (ex: 2)
-    } else {
-      mostrar = totalReal;
-    }
-    return { atacante: r.atacante, ticks: r.restam, totalTropas: mostrar };
+    return { atacante: r.atacante, ticks: r.restam, totalTropas: contaVisivel(tropas, r.raca) };
   });
 
-  res.json({ ok: true, minhaCoord, saidas, chegando, sobAtaque: chegando.length > 0 });
+  return { coord, saidas, chegando, sobAtaque: chegando.length > 0 };
+}
+
+// ---------- MOVIMENTAÇÃO: tudo em trânsito (minhas saídas + ataques chegando) ----------
+app.get("/api/movimentacao", (req, res) => {
+  const c = exigeClan(req, res); if (!c) return;
+  const mov = calcularMovimentacao(c);
+  res.json({ ok: true, minhaCoord: mov.coord, saidas: mov.saidas, chegando: mov.chegando, sobAtaque: mov.sobAtaque });
 });
 
 app.post("/api/recuar", (req, res) => {
@@ -406,9 +421,12 @@ app.post("/api/recuar", (req, res) => {
   const { idx } = req.body || {};
   const slot = db.prepare("SELECT * FROM slots WHERE clan_id=? AND idx=?").get(c.id, idx);
   if (!slot || slot.fase !== "indo") return res.status(400).json({ erro: "Só é possível recuar durante a ida." });
-  const percorrido = CONST.VIAGEM - slot.restam;
+  const tropasSlot = JSON.parse(slot.tropas || "{}");
+  const pesqTDV = contarPesquisasTDV(c.id);
+  const tdvTotal = tdvExpedicao(tropasSlot, c.raca, pesqTDV, "ataque");
+  const percorrido = tdvTotal - slot.restam;
   if (percorrido <= 0) {
-    const tropas = JSON.parse(slot.tropas || "{}");
+    const tropas = tropasSlot;
     db.transaction(() => {
       for (const [u, q] of Object.entries(tropas)) if (q > 0)
         db.prepare(`INSERT INTO exercito (clan_id, unidade, qtd) VALUES (?,?,?)
