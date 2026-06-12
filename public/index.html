@@ -47,6 +47,20 @@
   .nota { color:#8a8a6a; font-size:10px; line-height:1.6; margin-top:10px; font-weight:400; }
   .corrente { display:block; width:100%; max-width:560px; margin:6px auto 14px; height:auto; }
   .divisor-img { display:block; width:100%; max-width:560px; margin:4px auto; height:auto; }
+  /* tabela de unidades estilo clássico */
+  .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:2px -8px 8px; padding:0 8px; }
+  table.unidades { border-collapse:collapse; width:100%; min-width:560px; font-size:11px; font-weight:600; }
+  table.unidades th { font-family:'Metamorphous',Georgia,serif; color:#e8c75a; font-weight:400; font-size:10px; letter-spacing:.04em;
+    background:linear-gradient(180deg,#2c3f1e,#1a2712); border:1px solid #0c1408; padding:5px 6px; text-align:center; white-space:nowrap; position:sticky; top:0; }
+  table.unidades td { border:1px solid #14200f; padding:4px 6px; text-align:center; color:#cdbf8e; white-space:nowrap; }
+  table.unidades td.nome { text-align:left; font-family:'Metamorphous',Georgia,serif; color:#e8c75a; font-weight:400; padding-right:10px; }
+  table.unidades td.cls { color:#9fd48a; }
+  table.unidades tr:nth-child(even) td { background:rgba(40,60,30,.16); }
+  table.unidades tr:hover td { background:rgba(90,130,60,.18); }
+  .raca-faixa { font-family:'Metamorphous',Georgia,serif; color:#e8c75a; font-size:13px; letter-spacing:.14em; text-transform:uppercase;
+    text-align:center; margin:16px 0 6px; padding:6px; background:linear-gradient(90deg,transparent,rgba(90,130,50,.22),transparent); }
+  .legenda { font-size:10px; color:#9a9270; font-weight:400; line-height:1.7; margin-top:10px; }
+  .legenda b { color:#cdbf8e; }
   .banner-topo { width:100%; max-width:100%; margin:0 0 4px; padding:0; text-align:center; }
   .banner-topo img { width:100%; height:auto; display:block; filter:drop-shadow(0 6px 26px rgba(40,140,40,.4)); }
   .h-logo { text-align:center; padding:48px 16px 4px; position:relative; }
@@ -262,6 +276,35 @@
     </div>
     <div id="aba-ranking" style="display:none;"><div class="secao-h">🏆 RANKING (XP)</div><div id="ranking-lista"></div></div>
     <div id="aba-unidades" style="display:none;"><div id="cards-unidades-todas"></div></div>
+    <div id="aba-espionagem" style="display:none;">
+      <div class="secao-h">🕵️ ESPIONAGEM</div>
+      <div class="painel" id="esp-status">
+        <div style="display:flex; justify-content:space-around; text-align:center; gap:8px;">
+          <div><div class="ouro" style="font-size:22px;" id="esp-meus">0</div><div class="cinza" style="font-size:10px;">MEUS ESPIÕES</div></div>
+          <div><div class="verde" style="font-size:22px;" id="esp-contra">0</div><div class="cinza" style="font-size:10px;">CONTRA-ESPIÕES</div></div>
+        </div>
+        <div class="nota" id="esp-bonus-nota"></div>
+      </div>
+
+      <div class="secao-h">PRODUZIR</div>
+      <div id="esp-producao"><div class="cinza" style="font-size:11px;">Carregando…</div></div>
+
+      <div class="secao-h">MISSÃO DE ESPIONAGEM</div>
+      <div class="painel">
+        <label class="cinza" style="font-size:11px;">Coordenada do alvo (ex: 3.5)</label>
+        <input id="esp-alvo" type="text" inputmode="decimal" placeholder="território.slot" style="width:100%; margin:4px 0 10px;" oninput="previewEsp()">
+        <label class="cinza" style="font-size:11px;">Tipo de relatório</label>
+        <select id="esp-tipo" style="width:100%; margin:4px 0 10px;">
+          <option value="recursos">Recursos (ouro / madeira / alimento na base)</option>
+          <option value="tropas">Tropas (tipo e quantidade na base)</option>
+        </select>
+        <label class="cinza" style="font-size:11px;">Quantos espiões enviar</label>
+        <input id="esp-qtd" type="number" min="1" value="1" style="width:100%; margin:4px 0 10px;" oninput="previewEsp()">
+        <div id="esp-previa" class="nota" style="text-align:center; font-size:13px; min-height:34px;"></div>
+        <button class="destaque full" onclick="dispararEsp()">🕵️ ENVIAR MISSÃO</button>
+      </div>
+      <div id="esp-relatorio"></div>
+    </div>
     <div id="aba-niveis" style="display:none;"><div class="secao-h">NÍVEIS</div><div class="painel" id="tab-niveis"></div>
       <p class="nota">Atacar 3+ níveis abaixo rende XP quase nulo.</p></div>
   </div>
@@ -270,6 +313,7 @@
     <button id="nav-mundo" onclick="abaJogo('mundo')"><span class="ico">🗺️</span>Mundo</button>
     <button id="nav-ataques" onclick="abaJogo('ataques')"><span class="ico">⚔️</span>Ataques</button>
     <button id="nav-tropas" onclick="abaJogo('tropas')"><span class="ico">🛡️</span>Tropas</button>
+    <button id="nav-espionagem" onclick="abaJogo('espionagem')"><span class="ico">🕵️</span>Espião</button>
     <button id="nav-mais" onclick="abrirSheet()"><span class="ico">☰</span>Mais</button>
   </div>
   <div class="sheet" id="sheet"><h4>MAIS</h4><div class="itens">
@@ -374,7 +418,7 @@ function prepararAtaque(coord){
 
 // ---------- ABAS ----------
 function abaJogo(aba){
-  ["territorio","mundo","ataques","tropas","pesquisas","fundo","ranking","unidades","niveis"].forEach(a=>{
+  ["territorio","mundo","ataques","tropas","espionagem","pesquisas","fundo","ranking","unidades","niveis"].forEach(a=>{
     const el=document.getElementById("aba-"+a); if(el) el.style.display=(a===aba?"block":"none");
     const nv=document.getElementById("nav-"+a); if(nv) nv.classList.toggle("atual",a===aba);
   });
@@ -382,14 +426,120 @@ function abaJogo(aba){
   if(aba==="mundo") renderMundo();
   if(aba==="fundo") renderFundo();
   if(aba==="ranking") renderRanking();
+  if(aba==="espionagem") renderEspionagem();
+}
+
+// ---------- ESPIONAGEM ----------
+function temPesquisa(id){ return EST && EST.pesquisas && EST.pesquisas.includes(id); }
+function renderEspionagem(){
+  if(!EST) return;
+  const c=EST.clan;
+  document.getElementById("esp-meus").textContent=fmt(c.espioes||0);
+  document.getElementById("esp-contra").textContent=fmt(c.contra_espioes||0);
+  const bonus=(DADOS.ESPIONAGEM&&DADOS.ESPIONAGEM.BONUS_RACA&&DADOS.ESPIONAGEM.BONUS_RACA[c.raca])||0;
+  document.getElementById("esp-bonus-nota").innerHTML = bonus>0
+    ? '<span class="verde">Bônus racial '+c.raca+': +'+bonus+' de força em toda missão.</span>'
+    : 'Sua raça ('+c.raca+') não tem bônus de espionagem. Os Norfss são os espiões natos.';
+  // produção
+  let ph="";
+  for(const[nome,info]of Object.entries(DADOS.ESPIOES||{})){
+    const liberado=temPesquisa(info.pesq);
+    const cst=info.custo;
+    ph+='<div class="painel" style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'+
+      '<div><b class="ouro">'+nome+'</b><div class="custo" style="font-size:10px;">🪙'+fmt(cst.ouro)+' 🪵'+fmt(cst.madeira)+' 🌾'+fmt(cst.alimento)+' · '+info.ticks+' ticks</div></div>';
+    if(liberado){
+      ph+='<div class="acao" style="display:flex;gap:6px;"><input type="number" id="qe-'+cssId(nome)+'" value="1" min="1" style="width:64px;"><button class="mini" onclick="produzirEspiao(\''+nome.replace(/'/g,"\\'")+'\')">PRODUZIR</button></div>';
+    } else {
+      ph+='<div class="cinza" style="font-size:11px;max-width:130px;text-align:right;">🔒 Pesquise '+(info.pesq.startsWith("esp")?"Espionagem":"Contraespionagem")+' primeiro</div>';
+    }
+    ph+='</div></div>';
+  }
+  document.getElementById("esp-producao").innerHTML=ph||'<div class="cinza">—</div>';
+  previewEsp();
+}
+function produzirEspiao(nome){
+  const q=Math.max(1,parseInt(document.getElementById("qe-"+cssId(nome)).value)||1);
+  acao("/api/recrutar",{unidade:nome,qtd:q},nome+" em produção.");
+}
+let _prevTimer=null;
+function previewEsp(){
+  const alvo=(document.getElementById("esp-alvo")||{}).value;
+  const qtd=Math.max(1,parseInt((document.getElementById("esp-qtd")||{}).value)||1);
+  const box=document.getElementById("esp-previa");
+  if(!box) return;
+  if(!alvo||!/^\d+\.\d+$/.test(alvo.trim())){ box.innerHTML='<span class="cinza">Digite a coordenada do alvo para ver força e chance.</span>'; return; }
+  clearTimeout(_prevTimer);
+  _prevTimer=setTimeout(async()=>{
+    try{
+      const r=await api("/api/espionar-previa",{alvo:alvo.trim(),espioes:qtd});
+      const f=r.forca>=999?"∞":r.forca+"%";
+      box.innerHTML='Força: <b class="ouro">'+f+'</b> da defesa &nbsp;·&nbsp; Chance: <b class="verde">~'+r.chance+'%</b>';
+    }catch(e){ box.innerHTML='<span class="laranja">'+e.message+'</span>'; }
+  },250);
+}
+async function dispararEsp(){
+  const alvo=(document.getElementById("esp-alvo").value||"").trim();
+  const tipo=document.getElementById("esp-tipo").value;
+  const qtd=Math.max(1,parseInt(document.getElementById("esp-qtd").value)||1);
+  if(!/^\d+\.\d+$/.test(alvo)){ toast("Coordenada inválida (ex: 3.5)."); return; }
+  try{
+    const r=await api("/api/espionar",{alvo,tipo,espioes:qtd});
+    mostrarRelatorioEsp(r);
+    await refresh(); renderEspionagem();
+  }catch(e){ toast(e.message); }
+}
+function mostrarRelatorioEsp(r){
+  let h='<div class="secao-h">RELATÓRIO</div><div class="painel">';
+  h+='<div style="font-size:12px;margin-bottom:6px;">Alvo <b class="ouro">'+r.alvo+'</b> ('+r.alvoNome+') · força '+(r.forca>=999?"∞":r.forca+"%")+' · chance ~'+r.chance+'%</div>';
+  if(r.sucesso){
+    h+='<div class="verde" style="margin-bottom:6px;">✓ Missão bem-sucedida!</div>';
+    if(r.revelacao.tipo==="recursos"){
+      h+='<div>🪙 Ouro: <b>'+fmt(r.revelacao.ouro)+'</b><br>🪵 Madeira: <b>'+fmt(r.revelacao.madeira)+'</b><br>🌾 Alimento: <b>'+fmt(r.revelacao.alimento)+'</b></div>';
+    } else {
+      const pc=r.revelacao.porClasse||{};
+      const linhas=Object.entries(pc).map(([cls,q])=>fmt(q)+' '+cls).join(', ');
+      h+='<div>Tropas na base: <b>'+(linhas||"nenhuma")+'</b><div class="nota">Só conta o que está na base — tropa viajando não aparece.</div></div>';
+    }
+  } else {
+    h+='<div class="laranja">✗ Missão falhou. Você perdeu '+r.revelacao.perda+' espião(ões).</div>';
+  }
+  h+='</div>';
+  document.getElementById("esp-relatorio").innerHTML=h;
 }
 
 // ---------- POLLING ----------
 function iniciarPolling(){ clearInterval(window._poll); window._poll=setInterval(refresh, 5000); }
+// Detecta se o jogador está no meio de uma ação (cartão aberto, campo focado, sheet aberto).
+// Nesse caso, o refresh automático NÃO redesenha a tela — só atualiza os números do topo —
+// para não fechar o cartão de recrutar/atacar enquanto a pessoa digita.
+function interagindo(){
+  const ativo=document.activeElement;
+  if(ativo && (ativo.tagName==="INPUT" || ativo.tagName==="SELECT")) return true;
+  if(document.querySelector(".ucard.aberta")) return true;
+  if(document.getElementById("sheet")?.classList.contains("aberta")) return true;
+  return false;
+}
 async function refresh(){
   if(!TOKEN) return;
-  try{ await carregarDados(); EST=await api("/api/estado"); render(); }
+  try{
+    await carregarDados(); EST=await api("/api/estado");
+    if(interagindo()) atualizarTopo();   // só os números, preserva o que está aberto
+    else { render();
+      if(document.getElementById("aba-espionagem")?.style.display==="block") renderEspionagem();
+    }
+  }
   catch(e){ if(String(e.message).includes("Sessão")){ sair(); } }
+}
+// atualiza apenas a barra superior (recursos, XP, tick) sem mexer no resto da tela
+function atualizarTopo(){
+  if(!EST) return;
+  const c=EST.clan, r=EST.round;
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set("ui-cla", c.nome+" · nv "+c.nivel);
+  set("ui-ouro", fmt(c.ouro)); set("ui-madeira", fmt(c.madeira)); set("ui-alimento", fmt(c.alimento));
+  set("ui-trabs", c.trab_ouro+"/"+c.trab_madeira+"/"+c.trab_alimento+" (+"+c.trab_livres+")");
+  set("ui-xp", fmt(c.xp)); set("ui-tickpill", "tick "+r.tick);
+  set("banner-round", "Round: "+r.status.toUpperCase()+" · tick "+r.tick+" de "+r.duracao+" · "+r.tick_segundos+"s/tick");
 }
 
 // ---------- RENDER ----------
@@ -441,8 +591,7 @@ function render(){
   document.getElementById("cadeias").innerHTML=ch;
   document.getElementById("fila-pesquisas").innerHTML=EST.pesqAtivas.length?EST.pesqAtivas.map(a=>'<div class="fila-item"><span>'+DADOS.PESQ[a.pid].nome+'</span><span class="ouro">'+a.restam+' tick(s)</span></div>').join(""):'<div class="cinza" style="font-size:12px;">Nenhuma em andamento.</div>';
   // unidades + níveis
-  let todas=""; for(const[raca,unidades]of Object.entries(DADOS.RACAS)){ todas+='<div class="secao-h">'+raca.toUpperCase()+'</div>'; for(const[n,a]of Object.entries(unidades)) todas+=cardUnidade(n,a,raca,false); }
-  document.getElementById("cards-unidades-todas").innerHTML=todas;
+  document.getElementById("cards-unidades-todas").innerHTML=tabelaUnidades();
   document.getElementById("tab-niveis").innerHTML=DADOS.NIVEIS.map(n=>'<div class="fila-item"><span>Nível <b class="ouro">'+n[0]+'</b></span><span class="cinza">'+fmt(n[1])+' XP</span></div>').join("");
 }
 async function renderMeuTerritorio(){
@@ -467,6 +616,29 @@ function linhaClA(s,mesmoTerr){
 function cardUnidade(nome,arr,raca,interativo){
   const u=statsUnidade(raca||EST.clan.raca,nome); const ok=!interativo||nome==="Mercenário"||classeLiberada(u.classe);
   return '<div class="ucard '+(ok?"":"trancada")+'"><div class="cab" onclick="this.parentElement.classList.toggle(\'aberta\')"><span class="unome">'+nome+'</span><span class="badge">'+u.classe+(ok?"":" 🔒")+'</span><span class="custo">🪙'+u.ouro+' 🪵'+u.madeira+' 🌾'+u.alimento+'<br>'+u.turno+' ticks</span></div><div class="corpo"><div class="ustats"><span>Ini<b>'+u.ini+'</b></span><span>Def<b>'+u.def+'</b></span><span>Atq<b>'+u.atq+'</b></span><span>QAtq<b>'+u.qatq+'</b></span><span>Dano<b>'+u.dano+'</b></span><span>Vida<b>'+u.vida+'</b></span><span>Xp<b>'+u.xp+'</b></span><span>Alvos<b style="font-size:10px;">'+(u.a1||"–")+" "+(u.a2||"–")+" "+(u.a3||"–")+'</b></span></div>'+(interativo?(ok?'<div class="acao"><input type="number" id="q-'+cssId(nome)+'" value="1" min="1"><button class="mini" onclick="recrutar(\''+nome.replace(/'/g,"\\'")+'\')">RECRUTAR</button></div>':'<div class="cinza" style="font-size:11px;">Pesquise '+u.classe+'.</div>'):"")+'</div></div>';
+}
+// Tabela clássica: todas as raças e unidades visíveis de uma vez (estilo original)
+function tabelaUnidades(){
+  const cab='<thead><tr>'+
+    ['Unidade','Cls','A1','A2','A3','Ini','Def','Atq','QAtq','Dano','Vida','Xp','🪙','🪵','🌾','Turno']
+    .map(h=>'<th>'+h+'</th>').join('')+'</tr></thead>';
+  let html='';
+  // Mercenário primeiro (todas as raças)
+  const linha=(nome,u)=>'<tr><td class="nome">'+nome+'</td><td class="cls">'+u.classe+'</td>'+
+    '<td>'+(u.a1||'–')+'</td><td>'+(u.a2||'–')+'</td><td>'+(u.a3||'–')+'</td>'+
+    '<td>'+u.ini+'</td><td>'+u.def+'</td><td>'+u.atq+'</td><td>'+u.qatq+'</td><td>'+u.dano+'</td><td>'+u.vida+'</td>'+
+    '<td class="ouro">'+u.xp+'</td><td>'+u.ouro+'</td><td>'+u.madeira+'</td><td>'+u.alimento+'</td><td>'+u.turno+'</td></tr>';
+  html+='<div class="raca-faixa">Disponível para todas as raças</div>';
+  html+='<div class="tbl-wrap"><table class="unidades">'+cab+'<tbody>'+linha('Mercenário',U(DADOS.MERC))+'</tbody></table></div>';
+  for(const[raca,unidades]of Object.entries(DADOS.RACAS)){
+    html+='<div class="raca-faixa">'+raca+'</div>';
+    html+='<div class="tbl-wrap"><table class="unidades">'+cab+'<tbody>';
+    for(const[n,a]of Object.entries(unidades)) html+=linha(n,U(a));
+    html+='</tbody></table></div>';
+  }
+  html+='<div class="legenda"><b>LdF</b> Linha de Frente · <b>Art</b> Artilharia · <b>Cav</b> Cavalaria · <b>Inf</b> Infantaria · <b>Con</b> Conjuradores · <b>Ala</b> Alados · <b>Pro</b> Prodígios · <b>Mis</b> Místico · <b>MdG</b> Máquinas de Guerra<br>'+
+    '<b>A1/A2/A3</b> Alvos por prioridade · <b>Ini</b> Iniciativa (menor = mais rápido) · <b>QAtq</b> Qtd. de ataques · <b>Xp</b> Experiência que concede · <b>🪙🪵🌾</b> custo (ouro/madeira/alimento) · <b>Turno</b> ticks para ficar pronta</div>';
+  return html;
 }
 function cardSlot(s){
   let h='<div class="slot-card '+(s.fase!=="base"?"ativo":"")+'"><h4>SLOT '+(s.idx+1)+'<span class="cinza" style="font-size:10px;">'+(s.fase==="base"?"na base":s.fase==="indo"?"→ "+s.alvo:"retornando")+'</span></h4>';
@@ -521,10 +693,8 @@ function nomeClan(clans,coord){ const c=clans.find(x=>x.coord===coord); return c
 // ---------- PÚBLICAS ----------
 async function abrirUnidadesPub(){
   await carregarDados();
-  let h='<div class="secao-h">TABELA DE UNIDADES</div>';
-  for(const[raca,unidades]of Object.entries(DADOS.RACAS)){ h+='<div class="secao-h">'+raca.toUpperCase()+'</div>'; for(const[n,a]of Object.entries(unidades)){ const u=U(a);
-    h+='<div class="ucard"><div class="cab" onclick="this.parentElement.classList.toggle(\'aberta\')"><span class="unome">'+n+'</span><span class="badge">'+u.classe+'</span><span class="custo">🪙'+u.ouro+' 🪵'+u.madeira+' 🌾'+u.alimento+'<br>'+u.turno+' ticks</span></div><div class="corpo"><div class="ustats"><span>Ini<b>'+u.ini+'</b></span><span>Def<b>'+u.def+'</b></span><span>Atq<b>'+u.atq+'</b></span><span>QAtq<b>'+u.qatq+'</b></span><span>Dano<b>'+u.dano+'</b></span><span>Vida<b>'+u.vida+'</b></span><span>Xp<b>'+u.xp+'</b></span></div></div></div>'; } }
-  document.getElementById("pub-conteudo").innerHTML=h; irPara("tela-pub");
+  document.getElementById("pub-conteudo").innerHTML='<div class="secao-h">TABELA DE UNIDADES</div>'+tabelaUnidades();
+  irPara("tela-pub");
 }
 async function abrirRankingPub(){
   try{ const rk=await api("/api/ranking");

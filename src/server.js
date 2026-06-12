@@ -10,6 +10,7 @@ import { db, initSchema } from "./db.js";
 import { iniciarAgendador, processarTick } from "./tick.js";
 import {
   RACAS, MERC, DESCR, PESQ, CONST, NIVEIS,
+  ESPIOES, ESPIONAGEM, chanceEspionagem, forcaEspionagem,
   statsUnidade, classeDaUnidade, pesquisaDaClasse, nivelPorXP
 } from "./gamedata.js";
 
@@ -46,7 +47,7 @@ function exigeAdmin(req, res) {
 
 // ---------- DADOS ESTÁTICOS (para o front montar tabelas) ----------
 app.get("/api/dados", (req, res) => {
-  res.json({ RACAS, MERC, DESCR, PESQ, CONST, NIVEIS });
+  res.json({ RACAS, MERC, DESCR, PESQ, CONST, NIVEIS, ESPIOES, ESPIONAGEM });
 });
 
 // ---------- CADASTRO POR CONVITE ----------
@@ -131,6 +132,25 @@ app.post("/api/recrutar", (req, res) => {
   const c = exigeClan(req, res); if (!c) return;
   const { unidade, qtd } = req.body || {};
   const q = Math.max(1, parseInt(qtd) || 1);
+
+  // --- espiões / contra-espiões: unidades permanentes, exigem pesquisa própria ---
+  if (ESPIOES[unidade]) {
+    const e = ESPIOES[unidade];
+    const feita = db.prepare("SELECT 1 FROM pesquisas WHERE clan_id=? AND pid=?").get(c.id, e.pesq);
+    if (!feita) return res.status(400).json({ erro: `Pesquise ${PESQ[e.pesq].nome} para produzir ${unidade}.` });
+    const custo = { ouro: e.custo.ouro * q, madeira: e.custo.madeira * q, alimento: e.custo.alimento * q };
+    if (c.ouro < custo.ouro || c.madeira < custo.madeira || c.alimento < custo.alimento)
+      return res.status(400).json({ erro: "Recursos insuficientes." });
+    const round = getRound();
+    db.transaction(() => {
+      db.prepare("UPDATE clans SET ouro=ouro-?, madeira=madeira-?, alimento=alimento-? WHERE id=?")
+        .run(custo.ouro, custo.madeira, custo.alimento, c.id);
+      db.prepare("INSERT INTO fila_tropas (clan_id, unidade, qtd, pronto_em) VALUES (?,?,?,?)")
+        .run(c.id, unidade, q, round.tick + e.ticks);
+    })();
+    return res.json({ ok: true });
+  }
+
   let u;
   if (unidade === "Mercenário") u = statsUnidade(c.raca, "Mercenário");
   else {
@@ -220,7 +240,81 @@ app.post("/api/atacar", (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------- RECUAR SLOT ----------
+// ---------- ESPIONAR ----------
+app.post("/api/espionar", (req, res) => {
+  const c = exigeClan(req, res); if (!c) return;
+  const { alvo, tipo, espioes } = req.body || {};
+
+  if (!ESPIONAGEM.TIPOS[tipo]) return res.status(400).json({ erro: "Tipo de espionagem inválido." });
+  const enviar = Math.max(1, parseInt(espioes) || 0);
+  if (c.espioes < 1) return res.status(400).json({ erro: "Você não tem espiões. Pesquise Espionagem e produza espiões primeiro." });
+  if (enviar > c.espioes) return res.status(400).json({ erro: "Você não tem essa quantidade de espiões." });
+
+  const [t, s] = String(alvo).split(".").map(Number);
+  if (!t || !s || t < 1 || t > CONST.TERRITORIOS || s < 1 || s > CONST.SLOTS_POR_TERRITORIO)
+    return res.status(400).json({ erro: "Coordenada inválida." });
+  if (t === c.territorio && s === c.slot) return res.status(400).json({ erro: "Não dá para espionar a si mesmo." });
+  const alvoClan = db.prepare("SELECT * FROM clans WHERE territorio=? AND slot=?").get(t, s);
+  if (!alvoClan) return res.status(400).json({ erro: "Não há clã nessa coordenada." });
+
+  const custo = ESPIONAGEM.TIPOS[tipo].custo;
+  if (c.ouro < custo.ouro || c.madeira < custo.madeira || c.alimento < custo.alimento)
+    return res.status(400).json({ erro: "Recursos insuficientes para a missão." });
+
+  const bonus = ESPIONAGEM.BONUS_RACA[c.raca] || 0;
+  const chance = chanceEspionagem(enviar, bonus, alvoClan.contra_espioes || 0, alvoClan.espioes || 0);
+  const forca = forcaEspionagem(enviar, bonus, alvoClan.contra_espioes || 0, alvoClan.espioes || 0);
+  const sucesso = Math.random() * 100 < chance;
+
+  let revelacao = null;
+  db.transaction(() => {
+    // custo da missão sempre cobrado
+    db.prepare("UPDATE clans SET ouro=ouro-?, madeira=madeira-?, alimento=alimento-? WHERE id=?")
+      .run(custo.ouro, custo.madeira, custo.alimento, c.id);
+
+    if (sucesso) {
+      if (tipo === "recursos") {
+        revelacao = { tipo: "recursos", ouro: alvoClan.ouro, madeira: alvoClan.madeira, alimento: alvoClan.alimento };
+      } else {
+        // tropas: só o que está NA BASE (exercito). Tropa viajando em slots não conta.
+        const naBase = db.prepare("SELECT unidade, qtd FROM exercito WHERE clan_id=? AND qtd>0").all(alvoClan.id);
+        // agrega por CLASSE para o estilo "509 LdF, 100 MdG"
+        const porClasse = {};
+        for (const r of naBase) {
+          const cls = classeDaUnidade(alvoClan.raca, r.unidade) || "?";
+          porClasse[cls] = (porClasse[cls] || 0) + r.qtd;
+        }
+        revelacao = { tipo: "tropas", porClasse, detalhe: naBase };
+      }
+    } else {
+      // falhou: perde 10% dos espiões enviados (mínimo 1 se enviou algo)
+      const perda = Math.max(1, Math.floor(enviar * ESPIONAGEM.PERDA_FALHA));
+      db.prepare("UPDATE clans SET espioes = MAX(0, espioes - ?) WHERE id=?").run(perda, c.id);
+      revelacao = { perda };
+    }
+  })();
+
+  res.json({ ok: true, sucesso, chance, forca, alvo, tipo, revelacao,
+    alvoNome: alvoClan.nome });
+});
+
+// Prévia: estima força e chance contra um alvo SEM disparar (para a tela mostrar ao vivo).
+// Não revela nada do alvo além da estimativa de defesa agregada.
+app.post("/api/espionar-previa", (req, res) => {
+  const c = exigeClan(req, res); if (!c) return;
+  const { alvo, espioes } = req.body || {};
+  const enviar = Math.max(1, parseInt(espioes) || 0);
+  const [t, s] = String(alvo || "").split(".").map(Number);
+  if (!t || !s) return res.status(400).json({ erro: "Coordenada inválida." });
+  if (t === c.territorio && s === c.slot) return res.status(400).json({ erro: "Não dá para espionar a si mesmo." });
+  const alvoClan = db.prepare("SELECT contra_espioes, espioes FROM clans WHERE territorio=? AND slot=?").get(t, s);
+  if (!alvoClan) return res.status(400).json({ erro: "Não há clã nessa coordenada." });
+  const bonus = ESPIONAGEM.BONUS_RACA[c.raca] || 0;
+  const chance = chanceEspionagem(enviar, bonus, alvoClan.contra_espioes || 0, alvoClan.espioes || 0);
+  const forca = forcaEspionagem(enviar, bonus, alvoClan.contra_espioes || 0, alvoClan.espioes || 0);
+  res.json({ ok: true, chance, forca, bonus, enviar });
+});
+
 app.post("/api/recuar", (req, res) => {
   const c = exigeClan(req, res); if (!c) return;
   const { idx } = req.body || {};

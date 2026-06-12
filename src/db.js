@@ -53,6 +53,8 @@ export function initSchema() {
       protecao INTEGER NOT NULL DEFAULT 96,
       voto TEXT,                                    -- coordenada votada para líder
       fichas_mudanca INTEGER NOT NULL DEFAULT 1,    -- mudanças de coordenada gratuitas restantes
+      espioes INTEGER NOT NULL DEFAULT 0,           -- espiões prontos na base (unidade permanente)
+      contra_espioes INTEGER NOT NULL DEFAULT 0,    -- contra-espiões prontos (defesa)
       criado_em INTEGER NOT NULL,
       UNIQUE (territorio, slot)
     );
@@ -132,6 +134,12 @@ export function initSchema() {
     const cols = db.prepare("PRAGMA table_info(clans)").all();
     if (!cols.some(c => c.name === "fichas_mudanca")) {
       db.prepare("ALTER TABLE clans ADD COLUMN fichas_mudanca INTEGER NOT NULL DEFAULT 1").run();
+    }
+    if (!cols.some(c => c.name === "espioes")) {
+      db.prepare("ALTER TABLE clans ADD COLUMN espioes INTEGER NOT NULL DEFAULT 0").run();
+    }
+    if (!cols.some(c => c.name === "contra_espioes")) {
+      db.prepare("ALTER TABLE clans ADD COLUMN contra_espioes INTEGER NOT NULL DEFAULT 0").run();
     }
   } catch (e) { /* tabela ainda não existe na primeira execução: ok */ }
 }

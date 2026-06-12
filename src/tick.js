@@ -37,9 +37,15 @@ export function processarTick() {
       // 2) fila de tropas prontas neste tick
       const prontas = db.prepare("SELECT * FROM fila_tropas WHERE clan_id=? AND pronto_em<=?").all(c.id, novoTick);
       for (const f of prontas) {
-        db.prepare(`INSERT INTO exercito (clan_id, unidade, qtd) VALUES (?,?,?)
-                    ON CONFLICT(clan_id, unidade) DO UPDATE SET qtd = qtd + excluded.qtd`)
-          .run(c.id, f.unidade, f.qtd);
+        if (f.unidade === "Espião") {
+          db.prepare("UPDATE clans SET espioes = espioes + ? WHERE id=?").run(f.qtd, c.id);
+        } else if (f.unidade === "Contra-Espião") {
+          db.prepare("UPDATE clans SET contra_espioes = contra_espioes + ? WHERE id=?").run(f.qtd, c.id);
+        } else {
+          db.prepare(`INSERT INTO exercito (clan_id, unidade, qtd) VALUES (?,?,?)
+                      ON CONFLICT(clan_id, unidade) DO UPDATE SET qtd = qtd + excluded.qtd`)
+            .run(c.id, f.unidade, f.qtd);
+        }
         db.prepare("DELETE FROM fila_tropas WHERE id=?").run(f.id);
       }
 

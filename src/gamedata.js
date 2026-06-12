@@ -53,6 +53,56 @@ export const RACAS = {
     "Colecionador de Cabeças":["Pro","Pro","Ala","Mis",37,30,50,4,31,40,320,400,1700,1100,12],
     "Bruxo":["Mis","Pro","Inf","He",3,23,16,1,6,25,125,500,1400,600,12],
     "Catapulta":["MdG","Inf","Pro","LdF",68,40,40,1,34,55,480,1400,2000,1400,12]
+  },
+  Elfo: {
+    "Lâmina do Vento":["LdF","LdF","Inf",null,17,17,25,1,7,7,42,220,0,200,4],
+    "Sentinela":["LdF","LdF","Art",null,14,18,27,2,3,5,40,250,0,150,4],
+    "Elfo do Arco Longo":["Art","Ala","Cav","LdF",19,8,30,2,7,6,70,100,400,200,4],
+    "Seta Élfica":["Art","Art","LdF",null,12,15,10,1,5,7,55,300,0,250,4],
+    "Cavalaria Arqueira":["Cav","Cav","LdF","Ala",21,20,30,2,8,12,60,100,200,300,4],
+    "Espadachim":["Inf","Cav","Art","Inf",22,24,30,3,13,19,110,730,0,370,8],
+    "Mago":["Con","Pro","Inf","Ala",5,10,7,1,3,10,45,400,0,200,8],
+    "Druida":["Con","MdG","Pro","Cav",3,11,12,1,4,11,52,200,300,200,8],
+    "Tempesta":["Con","LdF","Cav","Art",10,7,10,1,4,10,120,650,330,230,8],
+    "Grifo":["Ala","Con","Mis","LdF",33,16,40,3,9,16,160,700,0,900,8],
+    "Arqueiro de Elite":["Pro","Con","Pro","He",30,28,52,5,19,27,300,600,1800,600,12],
+    "Alto Elfo":["Pro","Pro","Inf","Mis",28,36,39,4,25,32,330,1500,0,1800,12],
+    "Manipulador da Teia":["Mis","Pro","Ala",null,9,17,11,1,3,18,107,950,150,330,12],
+    "Mensageiro da Natureza":["Mis","Inf","MdG",null,8,24,15,1,6,20,188,800,850,850,12],
+    "Djinn":["Mis","Inf","Pro","Mis",10,20,40,1,3,21,280,1200,800,800,12],
+    "Golem de Cristal":["MdG","MdG","Pro","He",60,60,50,2,44,79,400,4000,0,0,12]
+  },
+  Anão: {
+    "Tropa de Choque":["LdF","LdF","Inf",null,24,40,23,1,7,15,72,370,0,350,4],
+    "Homem de Armas":["LdF","Cav","LdF","Con",23,34,29,1,11,13,60,200,100,300,4],
+    "Bravo":["LdF","Art","LdF",null,19,25,25,1,6,12,47,220,0,250,4],
+    "Besteiro":["Art","Ala","Cav",null,21,25,23,2,7,9,72,250,270,200,4],
+    "Escavador":["Cav","LdF","Cav","Inf",28,40,25,1,13,23,80,300,100,400,4],
+    "Defensor Anão":["Inf","Inf","LdF",null,35,47,36,1,23,54,150,1200,100,200,8],
+    "Martelo de Inerill":["Inf","Pro","Inf","Cav",36,43,40,1,28,50,160,900,350,350,8],
+    "Clérigo":["Con","Inf","LdF","Con",7,25,30,1,18,24,95,700,300,250,8],
+    "Cria de Inerill":["Ala","Ala",null,null,36,35,48,1,25,30,90,100,0,800,8],
+    "Suporte Aéreo":["Ala","Con","Mis",null,34,20,27,3,7,24,95,150,650,150,8],
+    "Guardião":["Pro","Pro","He",null,49,60,40,2,31,68,300,2500,100,400,12],
+    "Impiedoso":["Pro","Pro","MdG","Art",50,52,47,4,26,60,320,2300,200,700,12],
+    "Avatar":["Mis","Pro","He","Inf",9,40,30,2,12,35,170,1200,300,800,12],
+    "Aríete":["MdG","MdG","Pro","Inf",68,50,60,1,115,73,500,1800,1800,1400,12],
+    "Balisteira":["MdG","LdF","Cav","Mis",34,40,50,6,18,44,280,400,2000,400,12]
+  },
+  Norfss: {
+    "Gecko":["LdF","Art","LdF",null,15,15,25,2,3,7,44,50,150,240,4],
+    "Molok":["LdF","LdF","Inf","Ala",17,16,35,2,6,8,70,250,150,300,4],
+    "Naga":["Art","Ala","Cav","LdF",17,12,38,1,12,7,75,50,500,200,4],
+    "Vyper":["Art","Art","Con","Mis",13,12,27,2,5,5,75,0,0,750,4],
+    "Kraktor":["Cav","Cav","LdF","Inf",19,24,37,2,6,12,70,0,200,500,4],
+    "Píton":["Inf","LdF","Art",null,22,25,35,4,12,22,110,200,350,550,8],
+    "Arnole":["Inf","Inf","Pro",null,24,30,36,2,20,25,144,360,540,540,8],
+    "Khelus":["Con","LdF","Cav","Art",4,14,12,1,5,13,35,0,400,300,8],
+    "Wyrven":["Ala","Ala","Pro","Inf",28,15,40,2,16,17,120,0,0,1200,8],
+    "CroK":["Pro","Pro","He","MdG",36,40,40,4,29,35,290,1000,0,1900,12],
+    "Kamal":["Pro","Mis","Con","Inf",29,30,30,6,22,30,260,400,1500,700,12],
+    "Scynak":["Mis","He","Pro","Cav",2,18,10,1,3,22,135,800,500,500,12],
+    "Anaconda":["MdG","MdG","Inf","LdF",55,45,50,4,21,45,350,0,1100,2400,12]
   }
 };
 
@@ -61,7 +111,10 @@ export const MERC = ["LdF","Trab",null,null,90,5,3,0,0,8,70,200,250,250,4];
 export const DESCR = {
   Humano:"A raça mais versátil do mundo, que chegou às terras de Primórdio atravessando os mares.",
   Ferlix:"Outrora animais de guerra usados pelos elfos, foram libertos e evoluíram.",
-  Urgrosh:"Quatro raças moribundas, agora unidas. Disciplina rígida e brutalidade no combate."
+  Urgrosh:"Quatro raças moribundas, agora unidas. Disciplina rígida e brutalidade no combate.",
+  Elfo:"Mestres da magia e do arco, ágeis e antigos, ligados às florestas de Primórdio.",
+  Anão:"Guerreiros resistentes das montanhas, devotos de Inerill e exímios construtores de máquinas.",
+  Norfss:"Criaturas reptilianas dos pântanos, traiçoeiras e velozes, mestres do veneno."
 };
 
 export const PESQ = {
@@ -81,6 +134,51 @@ export const PESQ = {
 };
 
 export const NIVEIS = [[1,0],[2,500],[3,1500],[4,3500],[5,7000],[6,13000],[7,22000],[8,36000],[9,56000],[10,85000]];
+
+// ============================================================
+// ESPIONAGEM
+// Espiões e contra-espiões são unidades permanentes do clã (ficam parados, como tropa).
+// São produzidos pela fila normal de tropas, mas só após a pesquisa correspondente.
+// ============================================================
+export const ESPIOES = {
+  "Espião":      { pesq:"esp1", custo:{ouro:120, madeira:0,   alimento:80},  ticks:4 },
+  "Contra-Espião":{ pesq:"ctr1", custo:{ouro:120, madeira:80,  alimento:0},  ticks:4 }
+};
+
+export const ESPIONAGEM = {
+  // bônus racial somado à força de espionagem (só Norfss; demais = 0)
+  BONUS_RACA: { Norfss: 100 },
+  PESO_CONTRA: 2,        // cada contra-espião do alvo vale 2 na defesa
+  FATOR_ESP_ALVO: 0.75,  // espiões do próprio alvo também defendem, atenuados
+  TETO: 95,              // % máxima de sucesso (nunca 100% — preserva a graça)
+  PERDA_FALHA: 0.10,     // perde 10% dos espiões enviados se falhar
+  // tipos de relatório e seus custos de recurso por tentativa
+  TIPOS: {
+    recursos: { nome:"Recursos", custo:{ouro:200, madeira:0, alimento:200} },
+    tropas:   { nome:"Tropas",   custo:{ouro:400, madeira:0, alimento:300} }
+  }
+};
+
+// Chance de sucesso (0..TETO). Reproduz a simulação do jogo original:
+//   força  = espiões enviados + bônus racial
+//   defesa = contra-espiões do alvo * PESO_CONTRA + espiões do alvo * FATOR_ESP_ALVO
+//   chance = força / (força + defesa) escalado, limitado ao TETO
+export function chanceEspionagem(espioesEnviados, bonusRaca, contraAlvo, espioesAlvo) {
+  const forca = espioesEnviados + (bonusRaca || 0);
+  const defesa = contraAlvo * ESPIONAGEM.PESO_CONTRA + espioesAlvo * ESPIONAGEM.FATOR_ESP_ALVO;
+  if (forca <= 0) return 0;
+  const bruta = forca / (forca + defesa) * 100;
+  return Math.max(0, Math.min(ESPIONAGEM.TETO, Math.round(bruta * 10) / 10));
+}
+
+// Força relativa (estilo planilha): quantas vezes a espionagem supera a defesa.
+// Pode passar de 100% (ex: 167% = você tem 1,67x a força da defesa).
+export function forcaEspionagem(espioesEnviados, bonusRaca, contraAlvo, espioesAlvo) {
+  const forca = espioesEnviados + (bonusRaca || 0);
+  const defesa = contraAlvo * ESPIONAGEM.PESO_CONTRA + espioesAlvo * ESPIONAGEM.FATOR_ESP_ALVO;
+  if (defesa <= 0) return 999; // alvo sem nenhuma defesa
+  return Math.round(forca / defesa * 1000) / 10;
+}
 
 // Constantes de balanceamento (ajustáveis sem tocar na lógica)
 export const CONST = {
