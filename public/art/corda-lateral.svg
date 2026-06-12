@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="240" viewBox="0 0 48 240">
+  <defs>
+    <linearGradient id="ouro" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a4518"/>
+      <stop offset="0.30" stop-color="#caa54a"/>
+      <stop offset="0.50" stop-color="#f6e9a8"/>
+      <stop offset="0.70" stop-color="#caa54a"/>
+      <stop offset="1" stop-color="#4a3812"/>
+    </linearGradient>
+    <linearGradient id="ouroEscuro" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2e240c"/>
+      <stop offset="0.5" stop-color="#8a6f24"/>
+      <stop offset="1" stop-color="#241b09"/>
+    </linearGradient>
+    <filter id="sombra"><feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#000" flood-opacity="0.6"/></filter>
+  </defs>
+  <!-- corda trançada vertical, padrão repetível a cada 60px -->
+  <g filter="url(#sombra)" stroke-linecap="round" fill="none">
+    <!-- fio que desce torcendo (esquerda->direita->esquerda) -->
+    <g stroke="url(#ouroEscuro)" stroke-width="11">
+      <path d="M14 0 C34 15, 34 45, 14 60 C-6 75, -6 105, 14 120 C34 135, 34 165, 14 180 C-6 195, -6 225, 14 240"/>
+      <path d="M34 0 C14 15, 14 45, 34 60 C54 75, 54 105, 34 120 C14 135, 14 165, 34 180 C54 195, 54 225, 34 240"/>
+    </g>
+    <g stroke="url(#ouro)" stroke-width="6">
+      <path d="M14 0 C34 15, 34 45, 14 60 C-6 75, -6 105, 14 120 C34 135, 34 165, 14 180 C-6 195, -6 225, 14 240"/>
+      <path d="M34 0 C14 15, 14 45, 34 60 C54 75, 54 105, 34 120 C14 135, 14 165, 34 180 C54 195, 54 225, 34 240"/>
+    </g>
+    <!-- brilho fino -->
+    <g stroke="#f8eeb8" stroke-width="1.4" opacity="0.7">
+      <path d="M14 0 C34 15, 34 45, 14 60 C-6 75, -6 105, 14 120 C34 135, 34 165, 14 180 C-6 195, -6 225, 14 240"/>
+    </g>
+  </g>
+</svg>

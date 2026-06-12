@@ -6,17 +6,19 @@
 <title>Primórdio — Administração</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cinzel+Decorative:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Metamorphous&family=Pirata+One&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { background: #000; }
-  body { min-height:100vh; color:#d8c98e; font-family:Verdana,Geneva,sans-serif; font-weight:600; font-size:14px; margin:0; }
+  html, body { background: #050705; }
+  body { min-height:100vh; color:#d8c98e; font-family:Verdana,Geneva,sans-serif; font-weight:600; font-size:14px; margin:0;
+    background: radial-gradient(circle at 50% -8%, rgba(50,110,50,.2), transparent 50%), linear-gradient(180deg, rgba(8,12,8,.92), rgba(4,6,4,.96)), url('/art/pedra.png');
+    background-size: auto, auto, 256px 256px; background-attachment: fixed; }
   .wrap { max-width:600px; margin:0 auto; padding:20px 14px 60px; }
-  h1 { font-family:'Cinzel Decorative','Cinzel',Georgia,serif; font-weight:900; letter-spacing:.1em; font-size:30px; text-align:center;
-    background:linear-gradient(180deg,#f4e7a0,#caa54a 60%,#8a6f24); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-    filter:drop-shadow(0 0 12px rgba(70,170,70,.45)) drop-shadow(0 2px 2px rgba(0,0,0,.7)); }
-  h1 .sub { display:block; font-size:10px; letter-spacing:.45em; color:#bfa86a; margin-top:8px; font-family:'Cinzel',serif; -webkit-text-fill-color:#bfa86a; filter:none; font-weight:600; }
-  button { background:linear-gradient(180deg,#46632f,#2c421d 42%,#16230e); color:#e8c75a; border:2px solid transparent; outline:1px solid #5a7d40; font-family:'Cinzel',Georgia,serif; font-weight:700; letter-spacing:.14em; padding:12px 18px; border-radius:4px; cursor:pointer; font-size:12px; text-transform:uppercase; box-shadow:inset 0 1px 0 rgba(180,220,150,.18), inset 0 -2px 6px rgba(0,0,0,.5),0 2px 5px #000; min-height:44px; }
+  h1 { font-family:'Pirata One','Metamorphous',Georgia,serif; font-weight:400; letter-spacing:.06em; font-size:46px; text-align:center;
+    background:linear-gradient(180deg,#f8eeb8,#d4af4e 58%,#8a6f24); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 16px rgba(70,180,70,.5)) drop-shadow(0 3px 3px rgba(0,0,0,.8)); margin-bottom:2px; }
+  h1 .sub { display:block; font-size:10px; letter-spacing:.45em; color:#bfa86a; margin-top:6px; font-family:'Metamorphous',serif; -webkit-text-fill-color:#bfa86a; filter:none; }
+  button { background:linear-gradient(180deg,#46632f,#2c421d 42%,#16230e); color:#e8c75a; border:2px solid transparent; outline:1px solid #5a7d40; font-family:'Metamorphous',Georgia,serif; font-weight:700; letter-spacing:.14em; padding:12px 18px; border-radius:4px; cursor:pointer; font-size:12px; text-transform:uppercase; box-shadow:inset 0 1px 0 rgba(180,220,150,.18), inset 0 -2px 6px rgba(0,0,0,.5),0 2px 5px #000; min-height:44px; }
   button:hover { background:linear-gradient(180deg,#54743a,#34501f 42%,#1a2a12); color:#f4d97a; }
   button:hover { background:linear-gradient(180deg,#48642f,#2c421d 45%,#1a2a12); color:#f4d97a; }
   button.alerta { outline-color:#d47a5a; color:#f0a98a; }

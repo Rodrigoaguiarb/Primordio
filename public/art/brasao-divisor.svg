@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="56" viewBox="0 0 520 56">
+  <defs>
+    <linearGradient id="o2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8eeb8"/>
+      <stop offset="0.45" stop-color="#d4af4e"/>
+      <stop offset="0.75" stop-color="#8a6f24"/>
+      <stop offset="1" stop-color="#3a2c0e"/>
+    </linearGradient>
+    <radialGradient id="medal" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#1a3a1a"/>
+      <stop offset="0.6" stop-color="#0d1f0d"/>
+      <stop offset="1" stop-color="#050a05"/>
+    </radialGradient>
+    <filter id="s2"><feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.7"/></filter>
+  </defs>
+  <g filter="url(#s2)">
+    <!-- corrente horizontal que sai do centro pros lados -->
+    <g stroke="url(#o2)" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <path d="M260 28 C230 14, 200 42, 170 28 C140 14, 110 42, 80 28 C55 17, 30 38, 8 28"/>
+      <path d="M260 28 C290 14, 320 42, 350 28 C380 14, 410 42, 440 28 C465 17, 490 38, 512 28"/>
+    </g>
+    <!-- elos -->
+    <g fill="url(#o2)">
+      <circle cx="170" cy="28" r="4.5"/><circle cx="80" cy="28" r="4.5"/>
+      <circle cx="350" cy="28" r="4.5"/><circle cx="440" cy="28" r="4.5"/>
+    </g>
+    <!-- volutas/serpentes nas pontas -->
+    <g stroke="url(#o2)" stroke-width="4" fill="none" stroke-linecap="round">
+      <path d="M8 28 C2 20, 14 14, 18 22 C20 27, 13 30, 12 25"/>
+      <path d="M512 28 C518 20, 506 14, 502 22 C500 27, 507 30, 508 25"/>
+    </g>
+    <!-- medalhão central -->
+    <circle cx="260" cy="28" r="20" fill="url(#medal)" stroke="url(#o2)" stroke-width="3"/>
+    <circle cx="260" cy="28" r="13" fill="none" stroke="url(#o2)" stroke-width="1.4" opacity="0.8"/>
+    <!-- losango/estrela primordial dentro -->
+    <path d="M260 17 L267 28 L260 39 L253 28 Z" fill="url(#o2)" opacity="0.95"/>
+    <circle cx="260" cy="28" r="3" fill="#1a3a1a"/>
+  </g>
+</svg>
