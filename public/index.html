@@ -419,6 +419,11 @@ function enviarSlot(idx){
   for(const n of Object.keys(EST.exercito)){ const el=document.getElementById("st-"+idx+"-"+cssId(n)); const v=el?Math.max(0,parseInt(el.value)||0):0; if(v>0) tropas[n]=v; }
   acao("/api/atacar",{idx,alvo,tropas},"Expedição enviada!");
 }
+function reforcarSlot(idx){
+  const alvo=document.getElementById("alvo-"+idx).value.trim(); const tropas={};
+  for(const n of Object.keys(EST.exercito)){ const el=document.getElementById("st-"+idx+"-"+cssId(n)); const v=el?Math.max(0,parseInt(el.value)||0):0; if(v>0) tropas[n]=v; }
+  acao("/api/reforcar",{idx,alvo,tropas},"Reforço enviado ao aliado!");
+}
 function recuarSlot(idx){ acao("/api/recuar",{idx},"Recuo iniciado."); }
 function vd(id){ return Math.max(0,parseInt(document.getElementById(id).value)||0); }
 function doarFundo(){ acao("/api/fundo/doar",{ouro:vd("doa-ouro"),madeira:vd("doa-madeira"),alimento:vd("doa-alimento")},"Doação registrada."); }
@@ -461,12 +466,16 @@ async function renderMovimentacao(){
   if(!m.chegando.length){
     ch.innerHTML='<div class="painel"><span class="verde">Nenhum ataque a caminho.</span></div>';
   } else {
-    ch.innerHTML=m.chegando.map(a=>
-      '<div class="painel mov-card perigo" style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;">'+
-      '<div><b class="laranja">'+a.atacante+'</b> <span class="cinza">('+a.coord+' · '+a.raca+' nv '+a.nivel+')</span>'+
-      '<div style="font-size:11px;">'+fmt(a.totalTropas)+' tropa(s) a caminho</div></div>'+
+    ch.innerHTML=m.chegando.map(a=>{
+      const tropasTxt = (a.totalTropas>0)
+        ? '<b>'+fmt(a.totalTropas)+'</b> tropa(s)'
+        : '<span class="laranja">INDISPONÍVEL</span>';
+      return '<div class="painel mov-card perigo" style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;">'+
+      '<div><b class="laranja">'+a.atacante+'</b>'+
+      '<div style="font-size:11px;">'+tropasTxt+' a caminho</div></div>'+
       '<div style="text-align:right;"><div class="ouro" style="font-size:20px;">'+a.ticks+'</div><div class="cinza" style="font-size:9px;">TICKS (TDV)</div></div>'+
-      '</div></div>').join("");
+      '</div></div>';
+    }).join("");
   }
   // saídas
   const sa=document.getElementById("mov-saidas");
@@ -475,8 +484,11 @@ async function renderMovimentacao(){
   } else {
     sa.innerHTML=m.saidas.map(s=>{
       const indo=s.fase==="indo";
-      const rotulo=indo?('🗡️ Atacando '+(s.alvoNome||s.alvo)):'↩️ Voltando';
-      const extra=indo?('alvo '+s.alvo):(s.carga>0?('trazendo '+s.carga+' trabalhador(es)'):'sem carga');
+      const reforco=s.fase==="reforcando";
+      let rotulo, extra;
+      if(reforco){ rotulo='🛡️ Reforçando '+(s.alvoNome||s.alvo); extra='ajuda chega em '+s.ticks+' tick(s)'; }
+      else if(indo){ rotulo='🗡️ Atacando '+(s.alvoNome||s.alvo); extra='alvo '+s.alvo; }
+      else { rotulo='↩️ Voltando'; extra=(s.carga>0?('trazendo '+s.carga+' trabalhador(es)'):'sem carga'); }
       return '<div class="painel mov-card" style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;">'+
       '<div><b class="ouro">Slot '+(s.idx+1)+'</b> · '+rotulo+'<div style="font-size:11px;" class="cinza">'+fmt(s.totalTropas)+' tropa(s) · '+extra+'</div></div>'+
       '<div style="text-align:right;"><div class="verde" style="font-size:20px;">'+s.ticks+'</div><div class="cinza" style="font-size:9px;">TICKS</div></div>'+
@@ -714,7 +726,7 @@ function cardSlot(s){
     const tipos=Object.entries(EST.exercito);
     if(!tipos.length) h+='<div class="cinza" style="font-size:12px;">Sem tropas na base.</div>';
     else{ tipos.forEach(([n,q])=>{ h+='<div class="slot-tropa"><span>'+n+' <span class="cinza">('+q+')</span></span><input type="number" min="0" max="'+q+'" value="0" id="st-'+s.idx+'-'+cssId(n)+'"></div>'; });
-      h+='<div class="slot-alvo"><input type="text" id="alvo-'+s.idx+'" placeholder="alvo ex.: 3.4"><button class="mini" onclick="enviarSlot('+s.idx+')">ENVIAR</button></div>'; }
+      h+='<div class="slot-alvo"><input type="text" id="alvo-'+s.idx+'" placeholder="alvo ex.: 3.4"><button class="mini" onclick="enviarSlot('+s.idx+')">ATACAR</button><button class="mini" style="outline-color:#5a8d40;color:#a8e08a;" onclick="reforcarSlot('+s.idx+')">REFORÇAR</button></div>'; }
   } else {
     const V=DADOS.CONST.VIAGEM;
     h+='<div style="font-size:12px; font-weight:400;">';

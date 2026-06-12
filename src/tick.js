@@ -81,10 +81,36 @@ export function processarTick() {
           db.prepare("UPDATE slots SET fase='base', alvo=NULL, tropas=NULL, restam=0, carga=0 WHERE clan_id=? AND idx=?")
             .run(s.clan_id, s.idx);
         }
+      } else if (s.fase === "reforcando") {
+        if (restam > 0) {
+          db.prepare("UPDATE slots SET restam=? WHERE clan_id=? AND idx=?").run(restam, s.clan_id, s.idx);
+        } else {
+          // chegou no aliado: as tropas entram na DEFESA dele (exército do aliado)
+          const aliado = clanEmCoord(s.alvo);
+          const tropas = JSON.parse(s.tropas || "{}");
+          const atacante = db.prepare("SELECT nome, territorio FROM clans WHERE id=?").get(s.clan_id);
+          if (aliado && aliado.territorio === atacante.territorio) {
+            for (const [u, q] of Object.entries(tropas)) {
+              if (q > 0) db.prepare(`INSERT INTO exercito (clan_id, unidade, qtd) VALUES (?,?,?)
+                ON CONFLICT(clan_id, unidade) DO UPDATE SET qtd = qtd + excluded.qtd`).run(aliado.id, u, q);
+            }
+            const totalR = Object.values(tropas).reduce((a,b)=>a+b,0);
+            db.prepare("INSERT INTO relatorios (clan_id, tick, texto, criado_em) VALUES (?,?,?,?)")
+              .run(aliado.id, novoTick, `Reforço de ${atacante.nome} chegou: +${totalR} tropa(s) na sua defesa.`, Date.now());
+            db.prepare("INSERT INTO relatorios (clan_id, tick, texto, criado_em) VALUES (?,?,?,?)")
+              .run(s.clan_id, novoTick, `Seu reforço chegou em ${s.alvo} e reforçou a defesa do aliado.`, Date.now());
+          } else {
+            // aliado sumiu/mudou: tropas voltam para quem enviou
+            for (const [u, q] of Object.entries(tropas)) {
+              if (q > 0) db.prepare(`INSERT INTO exercito (clan_id, unidade, qtd) VALUES (?,?,?)
+                ON CONFLICT(clan_id, unidade) DO UPDATE SET qtd = qtd + excluded.qtd`).run(s.clan_id, u, q);
+            }
+          }
+          db.prepare("UPDATE slots SET fase='base', alvo=NULL, tropas=NULL, restam=0, carga=0 WHERE clan_id=? AND idx=?")
+            .run(s.clan_id, s.idx);
+        }
       }
     }
-
-    // 5) recalcula nível de todos (XP pode ter mudado nas batalhas)
     for (const c of db.prepare("SELECT id, xp FROM clans").all()) {
       db.prepare("UPDATE clans SET nivel=? WHERE id=?").run(nivelPorXP(c.xp), c.id);
     }

@@ -185,6 +185,7 @@ export const CONST = {
   TAXA_PRODUCAO: 60,      // recurso por trabalhador por tick
   PROTECAO_TICKS: 96,     // proteção de iniciante
   VIAGEM: 8,              // ticks de ida (= ticks de volta)
+  VIAGEM_REFORCO: 4,      // ticks para reforçar um aliado do mesmo território (defesa chega mais rápido)
   TROPAS_INICIAIS: 6,     // trabalhadores no início
   RECURSOS_INICIAIS: { ouro: 1500, madeira: 1500, alimento: 1500 },
   PISO_TRAB_PROTEGIDO: 40,
