@@ -52,6 +52,7 @@ export function initSchema() {
       trab_livres INTEGER NOT NULL DEFAULT 6,
       protecao INTEGER NOT NULL DEFAULT 96,
       voto TEXT,                                    -- coordenada votada para líder
+      fichas_mudanca INTEGER NOT NULL DEFAULT 1,    -- mudanças de coordenada gratuitas restantes
       criado_em INTEGER NOT NULL,
       UNIQUE (territorio, slot)
     );
@@ -125,4 +126,12 @@ export function initSchema() {
   if (!r) {
     db.prepare("INSERT INTO round (id, status, tick, duracao, tick_segundos, ultimo_tick_em) VALUES (1,'inscricoes',0,1440,120,0)").run();
   }
+
+  // migração: adiciona fichas_mudanca a bancos criados antes desta versão
+  try {
+    const cols = db.prepare("PRAGMA table_info(clans)").all();
+    if (!cols.some(c => c.name === "fichas_mudanca")) {
+      db.prepare("ALTER TABLE clans ADD COLUMN fichas_mudanca INTEGER NOT NULL DEFAULT 1").run();
+    }
+  } catch (e) { /* tabela ainda não existe na primeira execução: ok */ }
 }

@@ -345,6 +345,39 @@ app.post("/api/territorio-editar", (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------- MUDAR DE COORDENADA (jogar perto de amigos) ----------
+// 1ª mudança gratuita; 2ª em diante reservada para o Título (pago, futuro).
+app.post("/api/mudar-coordenada", (req, res) => {
+  const c = exigeClan(req, res); if (!c) return;
+  const { destino } = req.body || {};
+
+  if (c.fichas_mudanca <= 0)
+    return res.status(400).json({ erro: "Você já usou sua mudança gratuita. Mudanças extras chegam com o Título." });
+
+  // trava: não pode mudar com expedições em viagem (evita fuga de combate)
+  const emViagem = db.prepare("SELECT COUNT(*) n FROM slots WHERE clan_id=? AND fase!='base'").get(c.id).n;
+  if (emViagem > 0)
+    return res.status(400).json({ erro: "Recolha suas expedições antes de mudar de território." });
+
+  const [t, s] = String(destino).split(".").map(Number);
+  if (!t || !s || t < 1 || t > CONST.TERRITORIOS || s < 1 || s > CONST.SLOTS_POR_TERRITORIO)
+    return res.status(400).json({ erro: "Coordenada inválida (ex.: 7.3)." });
+  if (t === c.territorio && s === c.slot)
+    return res.status(400).json({ erro: "Você já está nessa coordenada." });
+
+  const ocupado = db.prepare("SELECT id FROM clans WHERE territorio=? AND slot=?").get(t, s);
+  if (ocupado) return res.status(400).json({ erro: "Essa coordenada já está ocupada. Escolha um slot vazio." });
+
+  db.transaction(() => {
+    db.prepare("UPDATE clans SET territorio=?, slot=?, fichas_mudanca=fichas_mudanca-1, voto=NULL WHERE id=?")
+      .run(t, s, c.id);
+    // garante que o fundo do território de destino exista
+    db.prepare("INSERT OR IGNORE INTO fundos (territorio) VALUES (?)").run(t);
+  })();
+
+  res.json({ ok: true, territorio: t, slot: s });
+});
+
 // ============================================================
 // ADMIN
 // ============================================================
