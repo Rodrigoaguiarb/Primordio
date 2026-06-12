@@ -315,6 +315,44 @@ app.post("/api/espionar-previa", (req, res) => {
   res.json({ ok: true, chance, forca, bonus, enviar });
 });
 
+// ---------- MOVIMENTAÇÃO: tudo em trânsito (minhas saídas + ataques chegando) ----------
+app.get("/api/movimentacao", (req, res) => {
+  const c = exigeClan(req, res); if (!c) return;
+  const minhaCoord = c.territorio + "." + c.slot;
+
+  // Minhas expedições (slots indo/voltando)
+  const meusSlots = db.prepare("SELECT idx, fase, alvo, tropas, restam, carga FROM slots WHERE clan_id=? AND fase!='base' ORDER BY idx").all(c.id);
+  const saidas = meusSlots.map(s => {
+    const tropas = s.tropas ? JSON.parse(s.tropas) : {};
+    const total = Object.values(tropas).reduce((a, b) => a + b, 0);
+    let alvoNome = null;
+    if (s.alvo) {
+      const [t, sl] = s.alvo.split(".").map(Number);
+      const ac = db.prepare("SELECT nome FROM clans WHERE territorio=? AND slot=?").get(t, sl);
+      alvoNome = ac ? ac.nome : null;
+    }
+    return { idx: s.idx, fase: s.fase, alvo: s.alvo, alvoNome, ticks: s.restam, totalTropas: total, carga: s.carga };
+  });
+
+  // Ataques inimigos vindo CONTRA mim: slots de outros clãs, fase 'indo', alvo = minha coordenada
+  const incomingRows = db.prepare(`
+    SELECT s.restam, s.tropas, cl.nome AS atacante, cl.territorio, cl.slot, cl.raca, cl.nivel
+    FROM slots s JOIN clans cl ON cl.id = s.clan_id
+    WHERE s.fase='indo' AND s.alvo=? AND s.clan_id<>?
+    ORDER BY s.restam ASC
+  `).all(minhaCoord, c.id);
+  const chegando = incomingRows.map(r => {
+    const tropas = r.tropas ? JSON.parse(r.tropas) : {};
+    const total = Object.values(tropas).reduce((a, b) => a + b, 0);
+    return {
+      atacante: r.atacante, coord: r.territorio + "." + r.slot, raca: r.raca, nivel: r.nivel,
+      ticks: r.restam, totalTropas: total
+    };
+  });
+
+  res.json({ ok: true, minhaCoord, saidas, chegando, sobAtaque: chegando.length > 0 });
+});
+
 app.post("/api/recuar", (req, res) => {
   const c = exigeClan(req, res); if (!c) return;
   const { idx } = req.body || {};
